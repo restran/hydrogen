@@ -5,11 +5,12 @@ from flask import Flask
 from flask import render_template, jsonify, request
 from flask_debugtoolbar import DebugToolbarExtension
 from mountains import logging
-from mountains.logging import StreamHandler
+from mountains.logging import StreamHandler, RotatingFileHandler
 from urls import init_url_rules
 import settings
 
-logging.init_log(StreamHandler())
+logging.init_log(StreamHandler(),
+                 RotatingFileHandler(max_bytes=1024 * 1024, backup_count=1))
 logger = logging.getLogger(__name__)
 
 # gui_dir = os.path.join(os.getcwd(), "templates")  # development path
@@ -113,7 +114,7 @@ def server_error(e):
 
 def run_server():
     init_url_rules(app)
-    app.run(host="127.0.0.1", port=settings.PORT, threaded=True)
+    app.run(host="127.0.0.1", port=settings.PORT, threaded=settings.DEBUG)
 
 
 if __name__ == "__main__":

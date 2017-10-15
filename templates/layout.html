@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/vendors/element-ui/index.min.css">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+    <title>Hydrogen</title>
+    <link href="/static/css/main.css" rel="stylesheet"/>
+    {% endblock %}
+    {% block style_block %}{% endblock %}
+    {% block head_script %}{% endblock %}
+</head>
+<body>
+{% block nav %}
+<div id="header-app">
+    <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+        <el-menu-item index="1">编码转换</el-menu-item>
+        <el-menu-item index="2">密码学</el-menu-item>
+        <el-menu-item index="3">哈希工具</el-menu-item>
+    </el-menu>
+    <el-button size="small"
+               @click="addTab(editableTabsValue2)">
+        add tab
+    </el-button>
+
+    <el-tabs v-model="editableTabsValue2" type="card" closable @tab-remove="removeTab">
+        <el-tab-pane
+                v-for="(item, index) in editableTabs2"
+                :key="item.name"
+                :label="item.title"
+                :name="item.name" v-text="item.content">
+        </el-tab-pane>
+    </el-tabs>
+</div>
+{% endblock %}
+
+<div id="main-content" class="container">
+    {% block main_content %}{% endblock %}
+</div>
+
+</body>
+<!-- 先引入 Vue -->
+<script src="/static/vendors/vue.min.js"></script>
+<!-- 引入组件库 -->
+<script src="/static/vendors/element-ui/index.min.js"></script>
+<script>
+    new Vue({
+        el: '#header-app',
+        data: function () {
+            return {
+                activeIndex: '1',
+                editableTabsValue2: '2',
+                editableTabs2: [{
+                    title: 'Tab 1',
+                    name: '1',
+                    content: 'Tab 1 content'
+                }, {
+                    title: 'Tab 2',
+                    name: '2',
+                    content: 'Tab 2 content'
+                }],
+                tabIndex: 2
+
+            }
+        },
+        methods: {
+            onSubmit: function () {
+                console.log('submit!');
+            },
+            handleSelect: function (key, keyPath) {
+                console.log(key, keyPath);
+            },
+            addTab: function (targetName) {
+                var newTabName = ++this.tabIndex + '';
+                this.editableTabs2.push({
+                    title: 'New Tab',
+                    name: newTabName,
+                    content: 'New Tab content'
+                });
+                this.editableTabsValue2 = newTabName;
+            },
+            removeTab: function (targetName) {
+                var tabs = this.editableTabs2;
+                var activeName = this.editableTabsValue2;
+                if (activeName === targetName) {
+                    tabs.forEach(function (tab, index) {
+                        if (tab.name === targetName) {
+                            var nextTab = tabs[index + 1] || tabs[index - 1];
+                            if (nextTab) {
+                                activeName = nextTab.name;
+                            }
+                        }
+                    });
+                }
+
+                this.editableTabsValue2 = activeName;
+                this.editableTabs2 = tabs.filter(function (tab) {
+                    return tab.name !== targetName
+                });
+            }
+        }
+    })
+</script>
+{% block tail_script %}{% endblock %}
+</html>

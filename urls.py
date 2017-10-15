@@ -3,9 +3,11 @@
 from __future__ import unicode_literals, absolute_import
 
 import converter.api
+import crypto.api
 
 url_handlers = [
-    ('/api/converter/convert-data/', converter.api.convert_data, ['POST'])
+    ('/api/converter/convert-data/', converter.api.convert_data, ['POST']),
+    ('/api/crypto/decode-data/', crypto.api.decode_data, ['POST'])
 ]
 
 
