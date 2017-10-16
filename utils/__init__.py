@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2017/10/12
 from __future__ import unicode_literals, absolute_import
-from flask import jsonify
 
 import logging
+import socket
+from flask import jsonify
 
 logger = logging.getLogger(__name__)
 
@@ -39,3 +40,19 @@ class APIHandler(object):
     @classmethod
     def error(cls, data=None, msg='', code=APIStatusCode.ERROR):
         return cls.return_json(code, data, msg)
+
+
+def is_port_open(ip, port):
+    """
+    检测端口是否被占用
+    :param ip:
+    :param port:
+    :return:
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect((ip, int(port)))
+        s.shutdown(2)
+        return True
+    except:
+        return False

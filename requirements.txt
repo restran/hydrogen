@@ -1,3 +1,7 @@
+requests
+jinja2==2.8.1
 flask
 magnetos
 mountains
+pythonnet
+pywebview

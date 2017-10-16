@@ -1,56 +1,36 @@
-import webbrowser
-
-import webview
-from flask import Flask
-from flask import render_template, jsonify, request
-from flask_debugtoolbar import DebugToolbarExtension
+# -*- coding: utf-8 -*-
+# Created by restran on 2017/7/17
+from __future__ import unicode_literals, absolute_import
+import os
+from flask import Flask, render_template
 from mountains import logging
 from mountains.logging import StreamHandler, RotatingFileHandler
-from urls import init_url_rules
-import settings
 
-logging.init_log(StreamHandler(),
-                 RotatingFileHandler(max_bytes=1024 * 1024, backup_count=1))
+import settings
+from urls import init_url_rules
+
+if settings.DEBUG:
+    level = logging.DEBUG
+else:
+    level = logging.INFO
+
+logging.init_log(StreamHandler(level=level),
+                 RotatingFileHandler(level=level, max_bytes=1024 * 1024 * 3, backup_count=1),
+                 disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 
-# gui_dir = os.path.join(os.getcwd(), "templates")  # development path
 
-# server = Flask(__name__, static_folder='static', template_folder='templates')
-# server.config["SEND_FILE_MAX_AGE_DEFAULT"] = 1  # disable caching
-
-
-# from blueprints.flaskr import init_db
-
-
-# def register_blueprints(app):
-#     """Register all blueprint modules
-#     Reference: Armin Ronacher, "Flask for Fun and for Profit" PyBay 2016.
-#     """
-#     for name in find_modules('blueprints'):
-#         logger.debug(name)
-#         mod = import_string(name)
-#         if hasattr(mod, 'bp'):
-#             app.register_blueprint(mod.bp)
-#     return None
+def get_path(target_path):
+    path = os.path.join(os.getcwd(), target_path)  # development path
+    if not os.path.exists(path):  # frozen executable path
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), target_path)
+    return path
 
 
-app = Flask(__name__)
-
-app.config.update(dict(
-    # DATABASE=os.path.join(app.root_path, 'flaskr.db'),
-    DEBUG=settings.DEBUG,
-    SECRET_KEY=settings.SECRET_KEY,
-    static_folder='static',
-    template_folder='templates',
-    SEND_FILE_MAX_AGE_DEFAULT=1
-))
-
-toolbar = DebugToolbarExtension(app)
-
-
-# app.config.from_envvar('FLASKR_SETTINGS', silent=True)
-
-# register_blueprints(app)
+# 静态文件目录，要用这个格式配置，不然会找不到
+app = Flask(__name__, static_folder=get_path('static'),
+            template_folder=get_path('templates'), )
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 1  # disable caching
 
 
 @app.after_request
@@ -61,45 +41,8 @@ def add_header(response):
 
 @app.route("/")
 def landing():
-    return render_template("index.html")
-
-
-@app.route("/index2")
-def landing2():
-    return render_template("index2.html")
-
-
-@app.route("/api/choose-path")
-def choose_path():
-    """
-    Invoke a folder selection dialog here
-    :return:
-    """
-    dirs = webview.create_file_dialog(webview.FOLDER_DIALOG)
-    if dirs and len(dirs) > 0:
-        directory = dirs[0]
-        if isinstance(directory, bytes):
-            directory = directory.decode("utf-8")
-
-        response = {"status": "ok", "directory": directory}
-    else:
-        response = {"status": "cancel"}
-
-    return jsonify(response)
-
-
-@app.route("/api/full-screen")
-def full_screen():
-    webview.toggle_fullscreen()
-    return jsonify({})
-
-
-@app.route("/api/open-url", methods=["POST"])
-def open_url():
-    url = request.json["url"]
-    webbrowser.open_new_tab(url)
-
-    return jsonify({})
+    # 不能用 send_from_directory，不如打包成 exe 后找不到文件
+    return render_template('index.html')
 
 
 @app.errorhandler(404)
@@ -114,7 +57,7 @@ def server_error(e):
 
 def run_server():
     init_url_rules(app)
-    app.run(host="127.0.0.1", port=settings.PORT, threaded=settings.DEBUG)
+    app.run(host="127.0.0.1", port=settings.PORT, threaded=True)
 
 
 if __name__ == "__main__":
