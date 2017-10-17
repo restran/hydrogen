@@ -1,10 +1,8 @@
 # hydrogen
 
-[![travis-ci](https://travis-ci.org/restran/hydrogen.svg?branch=master)](https://travis-ci.org/restran/hydrogen)
-[![Coverage Status](https://coveralls.io/repos/github/restran/hydrogen/badge.svg?branch=master)](https://coveralls.io/github/restran/hydrogen?branch=master)
+在做 CTF 的过程中，有一些编码转换等功能经常要使用，但是网上的各种工具都没有较满意的，而且也能很好自定义一些功能，因此就有了这样一个项目，类似的项目还有[CTFCrackTools](https://github.com/0Chencc/CTFCrackTools)。
 
-
-这个工具使用了 Web 技术来实现，界面使用 Vue + Element 写的，使用 [pywebview](https://github.com/r0x0r/pywebview) 实现窗口程序。
+这个工具使用了 Web 技术来实现，界面使用 Vue + Element 写的，后端使用 Flask，在 Python 3.5 环境下，使用 [pywebview](https://github.com/r0x0r/pywebview) 实现窗口程序。
 
 ---------
 
@@ -13,6 +11,8 @@
 ---------
 
 ## Build Windows Binary
+
+Windows 环境下可以使用 pyinstaller 打包成一个文件
 
     pyinstaller --onefile main.py
 
