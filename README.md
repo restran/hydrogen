@@ -4,11 +4,8 @@
 
 这个工具使用了 Web 技术来实现，界面使用 Vue + Element 写的，后端使用 Flask，在 Python 3.5 环境下，使用 [pywebview](https://github.com/r0x0r/pywebview) 实现窗口程序。
 
----------
-
 ![demo.gif](D:/Dropbox/Python/Workspace/hydrogen/doc/demo.gif "")
 
----------
 
 ## Build Windows Binary
 
