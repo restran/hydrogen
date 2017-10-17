@@ -6,7 +6,7 @@
 
 前端界面的项目地址: [hydrogen-fe](https://github.com/restran/hydrogen-fe)
 
-![demo.gif](doc/demo.gif "")
+![demo.gif](docs/demo.gif "")
 
 
 ## Build Windows Binary
