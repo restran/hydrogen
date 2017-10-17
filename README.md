@@ -17,7 +17,7 @@ Windows 环境下可以使用 pyinstaller 打包成一个文件
 
 打包成一个文件，不显示控制台，设置图标
 
-    pyinstaller --onefile --windowed --icon=app.ico app.py
+    pyinstaller --onefile --windowed --icon=icon.ico main.py
 
 
 ## 常见问题
