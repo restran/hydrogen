@@ -5,11 +5,12 @@ from __future__ import unicode_literals, absolute_import
 import logging
 from threading import Thread
 from time import sleep
-from utils import is_port_open
+
 import requests
 import webview
-import ctypes
+
 import settings
+from utils import is_port_open
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,6 @@ settings.PORT = settings.PRODUCT_PORT
 while is_port_open('127.0.0.1', settings.PORT):
     logger.info('port %s is unavailable' % settings.PORT)
     settings.PORT += 1
-
-# server_lock = Lock()
 
 
 def url_ok(url):

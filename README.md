@@ -1,38 +1,25 @@
 # hydrogen
 
-[![travis-ci](https://travis-ci.org/restran/magnetos.svg?branch=master)](https://travis-ci.org/restran/magnetos)
-[![Coverage Status](https://coveralls.io/repos/github/restran/magnetos/badge.svg?branch=master)](https://coveralls.io/github/restran/magnetos?branch=master)
+[![travis-ci](https://travis-ci.org/restran/hydrogen.svg?branch=master)](https://travis-ci.org/restran/hydrogen)
+[![Coverage Status](https://coveralls.io/repos/github/restran/hydrogen/badge.svg?branch=master)](https://coveralls.io/github/restran/hydrogen?branch=master)
 
-## 安装依赖
 
-- [pywebview](https://github.com/r0x0r/pywebview)
+这个工具使用了 Web 技术来实现，界面使用 Vue + Element 写的，使用 [pywebview](https://github.com/r0x0r/pywebview) 实现窗口程序。
+
+---------
+
+![demo.gif](D:/Dropbox/Python/Workspace/hydrogen/doc/demo.gif "")
+
+---------
 
 ## Build Windows Binary
 
-    C:/Python35/Scripts/pyinstaller --onefile main.py
+    pyinstaller --onefile main.py
 
 打包成一个文件，不显示控制台，设置图标
 
-    pyinstaller.exe --onefile --windowed --icon=app.ico app.py
+    pyinstaller --onefile --windowed --icon=app.ico app.py
 
-## Upload to PyPi
-
-安装最新的 setuptools
-
-    pip3 install -U pip setuptools twine
-
-生成 wheel 包
-
-    python3 setup.py register bdist_wheel --universal upload
-
-生成 tar.gz 包，因为 setup.py 用到了 pypandoc，安装的时候会需要依赖
-
-    python3 setup.py register sdist upload
-
-## 通过 setup install 安装后删除
-
-    python3 setup.py install --record files.txt
-    cat files.txt | xargs rm -rf
 
 ## 常见问题
 
@@ -46,3 +33,8 @@ Syntax error in  c:\python35\lib\site-packages\jinja2\asyncsupport.py
 https://stackoverflow.com/questions/43163201/pyinstaller-syntax-error-yield-inside-async-function-python-3-5-1
 
 jinja2 2.9.6 版本会有此问题，可以使用 jinja2==2.8.1 或者使用 pyinstaller 3.3 以上版本
+
+
+## 相关项目
+
+- [CTFCrackTools](https://github.com/0Chencc/CTFCrackTools)
