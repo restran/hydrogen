@@ -1,8 +1,10 @@
 # hydrogen
 
-在做 CTF 的过程中，有一些编码转换等功能经常要使用，但是网上的各种工具都没有较满意的，而且也能很好自定义一些功能，因此就有了这样一个项目，类似的项目还有[CTFCrackTools](https://github.com/0Chencc/CTFCrackTools)。
+在做 CTF 的过程中，有一些编码转换等功能经常要使用，但是网上的各种工具都没有较满意的，而且也不能自定义一些功能，因此就有了这样一个项目，类似的项目还有[CTFCrackTools](https://github.com/0Chencc/CTFCrackTools)。
 
 这个工具使用了 Web 技术来实现，界面使用 Vue + Element 写的，后端使用 Flask，在 Python 3.5 环境下，使用 [pywebview](https://github.com/r0x0r/pywebview) 实现窗口程序。
+
+前端界面的项目地址: [hydrogen-fe](https://github.com/restran/hydrogen-fe)
 
 ![demo.gif](doc/demo.gif "")
 
@@ -32,6 +34,11 @@ https://stackoverflow.com/questions/43163201/pyinstaller-syntax-error-yield-insi
 jinja2 2.9.6 版本会有此问题，可以使用 jinja2==2.8.1 或者使用 pyinstaller 3.3 以上版本
 
 
-## 相关项目
+## 类似项目
 
 - [CTFCrackTools](https://github.com/0Chencc/CTFCrackTools)
+
+## 致谢
+
+- phith0n: [tool-playground](https://github.com/phith0n/tool-playground)
+- hustcc: [xmorse](https://github.com/hustcc/xmorse)
