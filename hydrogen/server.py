@@ -5,7 +5,6 @@ import os
 from flask import Flask, render_template
 from mountains import logging
 from mountains.logging import StreamHandler, RotatingFileHandler
-
 import settings
 from urls import init_url_rules
 

@@ -17,8 +17,22 @@ Windows 环境下可以使用 pyinstaller 打包成一个文件
 
 打包成一个文件，不显示控制台，设置图标
 
-    pyinstaller --onefile --windowed --icon=icon.ico main.py
+    pyinstaller --onefile --windowed --icon=assets/icon.ico main.py
 
+## Build Mac Binary
+
+Mac 环境下可以使用 [py2app](https://pypi.python.org/pypi/py2app/) 来打包，可以参考[这篇文章](http://www.jianshu.com/p/afb6b2b97ce9)
+
+py2app 提供了“别名模式”，该模式通过与开发文件象征性的链接构建应用，测试和开发的时候使用。
+
+    python3 py2app_setup.py py2app -A
+
+构建发布应用
+
+    rm -rf build dist
+    python3 py2app_setup.py py2app
+    
+图标要使用 icns 格式 [IconFinder](https://www.iconfinder.com/) 和 [freepik](http://www.freepik.com/free-icons) 下载
 
 ## 常见问题
 
