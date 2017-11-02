@@ -32,7 +32,7 @@ OPTIONS = {
         'CFBundleName': APP_NAME,
         'CFBundleDisplayName': APP_NAME,
         'CFBundleGetInfoString': "Restran",
-        'CFBundleIdentifier': "net.restran.osx.%s" % APP_NAME.lower(),
+        'CFBundleIdentifier': "net.restran.mac.%s" % APP_NAME.lower(),
         'CFBundleVersion': VERSION,
         'CFBundleShortVersionString': VERSION,
         'NSHumanReadableCopyright': "Copyright © 2017, Restran, All Rights Reserved"
