@@ -24,7 +24,7 @@ second_cipher = [
 ]
 
 
-def encode(data):
+def encode(data, p):
     e_string1 = ""
     e_string2 = ""
     for index in data:
@@ -33,12 +33,12 @@ def encode(data):
                 e_string1 += first_cipher[i]
                 e_string2 += second_cipher[i]
                 break
-    print("first encode method:\n%s" % e_string1)
-    print("second encode method:\n%s" % e_string2)
+    p.print("first encode method:\n%s" % e_string1)
+    p.print("second encode method:\n%s" % e_string2)
     return
 
 
-def decode_method_1(data):
+def decode_method_1(data, p):
     new_data = list(data)
     result = []
     while len(new_data) > 0:
@@ -62,11 +62,11 @@ def decode_method_1(data):
             c = alphabet[index]
             result.append(c)
 
-    print("first encode method:")
-    print(''.join(result))
+    p.print("first encode method:")
+    p.print(''.join(result))
 
 
-def decode_method_2(data):
+def decode_method_2(data, p):
     new_data = list(data)
     cipher_dict = second_cipher
     result_list = [[]]
@@ -87,7 +87,7 @@ def decode_method_2(data):
                 index = i
                 break
         if index is None:
-            print('method_2: 解码%s失败' % t)
+            p.print('method_2: 解码%s失败' % t)
             continue
 
         # 8 是 i, 19 是 u
@@ -106,69 +106,54 @@ def decode_method_2(data):
             for x in result_list:
                 x.append(c)
 
-    print("second encode method:")
+    p.print("second encode method:")
     for x in result_list:
-        print(''.join(x))
+        p.print(''.join(x))
 
 
 def decode(data, verbose=False):
     p = PrintCollector()
-    e_array = re.findall(".{5}", data)
-    print(e_array)
-    d_string1 = ""
-    d_string2 = ""
-    for index in e_array:
-        for i in range(0, 26):
-            if index == first_cipher[i]:
-                d_string1 += alphabet[i]
-            if index == second_cipher[i]:
-                d_string2 += alphabet[i]
+    data = ''.join([t for t in data.lower() if t in ('a', 'b')])
 
-    p.print("first method: \n" + d_string1)
-    p.print("\nsecond method: \n" + d_string2)
+    for mode in range(2):
+        if mode == 0:
+            # e_array = re.findall(".{5}", data)
+            new_data = data
+        else:
+            # 互换 a 和 b
+            p.print('-----------------')
+            p.print('互换 a 和 b')
+            new_data = ''.join(['b' if t == 'a' else 'b' for t in data])
+            # e_array = re.findall(".{5}", new_data)
+
+        decode_method_1(new_data, p)
+        decode_method_2(new_data, p)
     return p.smart_output(verbose=verbose)
 
 
-def recovery_transformed_bacon_data(data):
-    """
-    woUld you prEfeR SausaGes or bacoN  wiTH YouR EgG
-    这里发现有大写有小写，非常诡异，故猜测大小写各代表两种状态，我们用a,b表示；小写是a,大写是b
-    :return:
-    """
-    print('原始数据')
-    print(data)
-    new_data = []
-    # data='woUld you prEfeR SausaGes or bacoN wiTH YouR EgG'
-    data = [t for t in data if t in string.ascii_letters]
-    for x, t in enumerate(data):
-        if t.isupper():
-            new_data.append('b')
+def decode_old(data, verbose=False):
+    p = PrintCollector()
+    data = ''.join([t for t in data.lower() if t in ('a', 'b')])
+
+    for mode in range(2):
+        if mode == 0:
+            e_array = re.findall(".{5}", data)
         else:
-            new_data.append('a')
+            # 互换 a 和 b
+            p.print('-----------------')
+            p.print('互换 a 和 b')
+            new_data = ''.join(['b' if t == 'a' else 'b' for t in data])
+            e_array = re.findall(".{5}", new_data)
 
-    new_data = ''.join(new_data)
-    print('转换后的数据')
-    print(new_data)
-    return new_data
+        d_string1 = ""
+        d_string2 = ""
+        for index in e_array:
+            for i in range(0, 26):
+                if index == first_cipher[i]:
+                    d_string1 += alphabet[i]
+                if index == second_cipher[i]:
+                    d_string2 += alphabet[i]
 
-
-def main():
-    """
-    如果遇到i,j,u,v等字符，第二种方法，会有多个输出结果
-    :return:
-    """
-    # data = 'abbabbabbbbaaaaaaabb'
-    # encode(data)
-
-    # 遇到这种类型的数据，是用大小写表示a和b，需要转换
-    data = "bacoN is one of aMerICa'S sWEethEartS. it's A dARlinG, SuCCulEnt fOoD tHAt PaIRs FlawLE"
-    data = recovery_transformed_bacon_data(data)
-
-    # data = 'baabaaabbbabaaabbaaaaaaaaabbabaaaabaaaaa/abaaabaaba/aaabaabbbaabbbaababb'
-    # 这种就直接解码
-    # data = 'abbab_babbb_baaaa_aaabb'
-    decode(data)
-
-
-if __name__ == '__main__':
-    main()
+        p.print("first method: \n" + d_string1)
+        p.print("\nsecond method: \n" + d_string2)
+    return p.smart_output(verbose=verbose)

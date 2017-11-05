@@ -7,6 +7,7 @@ import crypto.api
 
 url_handlers = [
     ('/api/converter/convert-data/', converter.api.convert_data, ['POST']),
+    ('/api/converter/what-encode/', converter.api.what_encode, ['POST']),
     ('/api/crypto/decode-data/', crypto.api.decode_data, ['POST'])
 ]
 

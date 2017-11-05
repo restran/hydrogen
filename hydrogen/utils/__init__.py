@@ -5,6 +5,7 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import socket
 from flask import jsonify
+from importlib import import_module
 
 logger = logging.getLogger(__name__)
 
@@ -56,3 +57,10 @@ def is_port_open(ip, port):
         return True
     except:
         return False
+
+
+def import_string(module_path):
+    try:
+        return import_module(module_path)
+    except AttributeError:
+        return None

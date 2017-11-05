@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2017/10/13
 from __future__ import unicode_literals, absolute_import
-from crypto import handlers
-from converter.handlers import converter
-from mountains.encoding import force_text, force_bytes
-from mountains.util import any_none
-from base64 import b64encode
-from flask import request
-from utils import APIHandler
+
 import logging
+
+from flask import request
+
+from crypto import handlers
+from utils import APIHandler, import_string
 
 logger = logging.getLogger(__name__)
 
 
 def do_decode(method, data, params):
-    h = getattr(handlers, method, None)
+    h = import_string('crypto.handlers.%s' % method)
     if h is not None:
         # data = force_text(converter.from_base64(data))
 
@@ -27,10 +26,37 @@ def do_decode(method, data, params):
         else:
             return '!!!error!!! no available decode for method %s' % method
 
-        if params is not None:
-            result = decode_func(data, *params, verbose=True)
+        def _do_decode(d):
+            if params is not None:
+                _result = decode_func(d, *params, verbose=True)
+            else:
+                _result = decode_func(d, verbose=True)
+
+            return _result
+
+        if method in ('manchester',):
+            index = 0
+            last_index = 0
+            data += ' '
+            length = len(data)
+            result = []
+            # 输入的时候是以什么字符分隔，输出的时候保持一致
+            while index < length:
+                t = data[index]
+                if t in (' ', '\n'):
+                    text = data[last_index:index]
+                    last_index = index + 1
+                    if text != '':
+                        r = _do_decode(text)
+                        result.append(r)
+
+                    result.append(t)
+                index += 1
+
+            result = ''.join(result)
+            result = result.rstrip(' ')
         else:
-            result = decode_func(data, verbose=True)
+            result = _do_decode(data)
 
     else:
         result = '!!!error!!! method %s not found' % method
