@@ -5,15 +5,15 @@ from __future__ import unicode_literals, absolute_import
 import logging
 
 from flask import request
-
 from crypto import handlers
-from utils import APIHandler, import_string
+from utils import APIHandler
 
 logger = logging.getLogger(__name__)
 
 
 def do_decode(method, data, params):
-    h = import_string('crypto.handlers.%s' % method)
+    # 不能用 import string 的方式，否则打包成 exe 后会无法 import
+    h = getattr(handlers, method, None)
     if h is not None:
         # data = force_text(converter.from_base64(data))
 

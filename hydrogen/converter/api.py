@@ -2,6 +2,7 @@
 # Created by restran on 2017/10/13
 from __future__ import unicode_literals, absolute_import
 from converter.handlers import converter, what_encode as what_encode_handler
+from converter.handlers.what_code_scheme import detect_code_scheme
 from mountains import force_text, force_bytes, text_type
 from base64 import b64encode
 from flask import request
@@ -87,12 +88,19 @@ def what_encode():
     if max_depth is None or data is None:
         return APIHandler.fail()
 
+    result = {}
     try:
-        result = what_encode_handler.decode(data, max_depth)
+        result['scheme_list'] = detect_code_scheme(data)
     except Exception as e:
         logger.exception(e)
-        result = '!!!error!!! %s' % e
+        result['scheme_list'] = '!!!error!!! %s' % e
 
-    if result is None:
-        result = '!!!error!!!'
+    try:
+        result['result'] = what_encode_handler.decode(data, max_depth)
+        if result['result'] is None:
+            result['result'] = '!!!error!!!'
+    except Exception as e:
+        logger.exception(e)
+        result['result'] = '!!!error!!! %s' % e
+
     return APIHandler.success(result)
