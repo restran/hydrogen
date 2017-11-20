@@ -15,7 +15,7 @@ else:
 
 logging.init_log(StreamHandler(level=level),
                  RotatingFileHandler(level=level, max_bytes=1024 * 1024 * 3, backup_count=1),
-                 disable_existing_loggers=False)
+                 disable_existing_loggers=True)
 logger = logging.getLogger(__name__)
 
 
