@@ -1,1 +1,1 @@
-py -3.5 main.py
+py -3.5 server.py

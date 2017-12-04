@@ -10,7 +10,7 @@ import zlib
 from base64 import urlsafe_b64decode
 from copy import deepcopy
 from optparse import OptionParser
-
+from functools import cmp_to_key
 from future.moves.urllib.parse import unquote_plus
 from mountains import PY3, PY2
 from mountains.encoding import utf8, to_unicode
@@ -50,6 +50,7 @@ encode_methods = [
     'pawn_shop',  # 当铺密码
     'switch_case',  # 大小写交换
     'reverse_alphabet',  # 字母表逆序
+    'reverse',  # 逆序
     'urlencode',
 ]
 
@@ -124,7 +125,7 @@ class WhatEncode(object):
             if decode_method == 'base16':
                 # 避免无限递归
                 # base_list = ('base16', 'base32', 'base64', 'urlsafe_b64')
-                base_list = ()
+                # base_list = ()
                 if len(encode_str) < 4:
                     return False, raw_encode_str
 
@@ -135,38 +136,42 @@ class WhatEncode(object):
                 else:
                     return False, raw_encode_str
             elif decode_method == 'base32':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
                 # 避免无限递归
                 # base_list = ('base16', 'base32', 'base64', 'urlsafe_b64')
-                base_list = ()
+                # base_list = ()
                 if len(encode_str) < 4:
                     return False, raw_encode_str
 
                 encode_str = encode_str.upper()
-                rex = re.compile('^[A-Z2-7]+[=]*$', re.MULTILINE)
+                rex = re.compile('^[A-Z2-7=]+$', re.MULTILINE)
                 # 自动纠正填充
                 if self.regex_match(rex, encode_str):
                     decode_str = partial_base32_decode(encode_str)
                 else:
                     return False, raw_encode_str
             elif decode_method == 'base64':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
+
                 # 避免无限递归
                 # base_list = ('base16', 'base32', 'base64', 'urlsafe_b64')
-                base_list = ()
+                # base_list = ()
                 if len(encode_str) < 4:
                     return False, raw_encode_str
 
-                rex = re.compile('^[A-Za-z0-9+/]+[=]*$', re.MULTILINE)
+                rex = re.compile('^[A-Za-z0-9+/=]+$', re.MULTILINE)
                 # 自动纠正填充
                 if self.regex_match(rex, encode_str):
                     decode_str = partial_base64_decode(encode_str)
                 else:
                     return False, raw_encode_str
             elif decode_method == 'urlsafe_b64':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
                 # base_list = ('base16', 'base32', 'base64', 'urlsafe_b64')
-                base_list = ()
+                # base_list = ()
                 if len(encode_str) < 4:
                     return False, raw_encode_str
-                rex = re.compile('^[A-Za-z0-9-_]+[=]{0,2}$', re.MULTILINE)
+                rex = re.compile('^[A-Za-z0-9-_=]+$', re.MULTILINE)
                 # 自动纠正填充
                 if self.regex_match(rex, encode_str):
                     decode_str = urlsafe_b64decode(base_padding(encode_str, 4))
@@ -196,7 +201,6 @@ class WhatEncode(object):
                     decode_str = b85decode(utf8(encode_str))
                 else:
                     return False, encode_str
-
             elif decode_method == 'pawn_shop':
                 try:
                     encode_str = encode_str.decode('gb2312')
@@ -303,10 +307,9 @@ class WhatEncode(object):
                         tmp_list = tmp_list[3:]
                     ascii_list.append(chr(int(tmp_str)))
                 decode_str = ''.join(ascii_list)
-
-            elif decode_method in ['switch_case', 'reverse_alphabet']:
+            elif decode_method in ['switch_case', 'reverse_alphabet', 'reverse']:
                 # 如果这里不做限制，会无限递归下去
-                if len(m_list) > 0 and m_list[-1] in ['switch_case', 'reverse_alphabet']:
+                if len(m_list) > 0 and m_list[-1] in ['switch_case', 'reverse_alphabet', 'reverse']:
                     return False, raw_encode_str
 
                 # 一定要包含 ascii 字符
@@ -314,9 +317,9 @@ class WhatEncode(object):
                 if len(tmp_data) <= 0:
                     return False, raw_encode_str
 
-                rex = re.compile('^[A-Za-z0-9+/]+[=]{0,2}$', re.MULTILINE)
-                if not self.regex_match(rex, encode_str):
-                    return False, raw_encode_str
+                # rex = re.compile('^[A-Za-z0-9+/=]$', re.MULTILINE)
+                # if not self.regex_match(rex, encode_str):
+                #     return False, raw_encode_str
 
                 if decode_method == 'switch_case':
                     new_data = []
@@ -340,6 +343,9 @@ class WhatEncode(object):
                                 t = chr(t)
                         new_data.append(t)
                     decode_str = ''.join(new_data)
+                elif decode_method == 'reverse':
+                    # 逆序
+                    decode_str = encode_str[::-1]
                 else:
                     return False, raw_encode_str
             elif decode_method == 'urlencode':
@@ -417,7 +423,6 @@ class WhatEncode(object):
                 data = item['data']
                 has_print = False
                 for i, m in enumerate(encode_methods):
-
                     tmp_m_list = deepcopy(m_list)
                     success, decode_str = self.parse_str(data, m, tmp_m_list)
 
@@ -447,8 +452,26 @@ class WhatEncode(object):
 
             should_try_list = new_should_try_list
 
+        def cmp_method_list(x, y):
+            len_x = len(x['m_list'])
+            len_y = len(y['m_list'])
+            if len_x == len_y:
+                for index, t in enumerate(x['m_list']):
+                    if x['m_list'][index] > y['m_list'][index]:
+                        return 1
+                    elif x['m_list'][index] == y['m_list'][index]:
+                        pass
+                    else:
+                        return -1
+                return 0
+            elif len_x > len_y:
+                return 1
+            else:
+                return -1
+
         result_method_list = sorted(result_method_dict.values(),
-                                    key=lambda x: x['methods'])
+                                    key=cmp_to_key(lambda x, y: cmp_method_list(x, y)),
+                                    reverse=True)
         return result_method_list
 
 
