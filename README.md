@@ -22,7 +22,7 @@ Windows 环境下可以使用 pyinstaller 打包成一个文件
 
 ## Build Mac Binary
 
-Mac 环境下可以使用 [py2app](https://pypi.python.org/pypi/py2app/) 来打包，可以参考[这篇文章](http://www.jianshu.com/p/afb6b2b97ce9)
+Mac 环境下可以使用 [py2app](https://pypi.python.org/pypi/py2app/) 来打包，可以参考[这篇文章](http://www.jianshu.com/p/afb6b2b97ce9)。py2app 使用 0.14 版本打包有问题，可以降级到 0.12 版本。
 
 py2app 提供了“别名模式”，该模式通过与开发文件象征性的链接构建应用，测试和开发的时候使用。
 
