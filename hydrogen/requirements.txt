@@ -1,5 +1,5 @@
 requests
 jinja2
 flask
-mountains
+mountains>=0.3.17
 pywebview
