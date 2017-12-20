@@ -7,6 +7,8 @@ from __future__ import unicode_literals, absolute_import
 
 import base64
 import binascii
+from xml.sax.saxutils import escape as xml_escape_func
+from xml.sax.saxutils import unescape as xml_unescape_func
 from base64 import b64decode, b32decode, b16decode
 from mountains.encoding import utf8, force_bytes, force_text
 
@@ -315,6 +317,14 @@ def all_digit_convert(data, data_type):
     }
 
     return data
+
+
+def xml_escape(data):
+    return xml_escape_func(data)
+
+
+def xml_un_escape(data):
+    return xml_unescape_func(data)
 
 
 if __name__ == "__main__":
