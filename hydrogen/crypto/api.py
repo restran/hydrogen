@@ -4,9 +4,9 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 
-from flask import request
 from crypto import handlers
 from utils import APIHandler
+from bottle import get, post, request
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2017/10/13
 from __future__ import unicode_literals, absolute_import
+
+import logging
+
+from bottle import request
+from mountains import text_type
+
 from converter.handlers import converter, what_encode as what_encode_handler
 from converter.handlers.what_code_scheme import detect_code_scheme
-from mountains import force_text, force_bytes, text_type
-from base64 import b64encode
-from flask import request
 from utils import APIHandler
-import logging
 
 logger = logging.getLogger(__name__)
 

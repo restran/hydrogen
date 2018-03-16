@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2017/7/17
 from __future__ import unicode_literals, absolute_import
+
 import os
-from flask import Flask, render_template
+
+from bottle import Bottle, run
+from bottle import static_file
 from mountains import logging
 from mountains.logging import StreamHandler, RotatingFileHandler
+
 import settings
 from urls import init_url_rules
 
@@ -23,40 +27,40 @@ def get_path(target_path):
     path = os.path.join(os.getcwd(), target_path)  # development path
     if not os.path.exists(path):  # frozen executable path
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), target_path)
+
+    logger.info(path)
     return path
 
 
 # 静态文件目录，要用这个格式配置，不然会找不到
-app = Flask(__name__, static_folder=get_path('static'),
-            template_folder=get_path('templates'), )
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 1  # disable caching
+app = Bottle()
 
 
-@app.after_request
-def add_header(response):
-    response.headers['Cache-Control'] = 'no-store'
-    return response
+@app.route('/static/<path:path>')
+def callback(path):
+    return static_file(path, get_path('static'))
 
 
 @app.route("/")
 def landing():
-    # 不能用 send_from_directory，不如打包成 exe 后找不到文件
-    return render_template('index.html')
+    # 不能用 send_from_directory，不然打包成 exe 后找不到文件
+    return static_file('index.html', get_path('templates'))
 
 
-@app.errorhandler(404)
-def page_not_found(e):
-    return '404', 200
+@app.error(500)
+def error404(e):
+    return '500 %s' % e
 
 
-@app.errorhandler(500)
-def server_error(e):
-    return '500', 200
+@app.error(404)
+def error404(e):
+    return '404 %s ' % e
 
 
 def run_server():
     init_url_rules(app)
-    app.run(host="127.0.0.1", port=settings.PORT, threaded=True)
+    run(app, host='127.0.0.1', port=settings.PORT, debug=False)
+    # app.run(host="127.0.0.1", port=settings.PORT, threaded=True)
 
 
 if __name__ == "__main__":

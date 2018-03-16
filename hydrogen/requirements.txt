@@ -1,6 +1,5 @@
 requests
-jinja2
-flask
+bottle
 mountains>=0.3.17
 pywebview
 pycipher

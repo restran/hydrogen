@@ -5,10 +5,23 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import socket
 import string
-from flask import jsonify
+from mountains import json
+from bottle import response
 from importlib import import_module
 
 logger = logging.getLogger(__name__)
+
+
+def jsonify(code, data, msg):
+    data = {
+        'data': data,
+        'code': code,
+        'msg': msg
+    }
+    data = json.dumps(data)
+
+    response.content_type = 'application/json; charset=utf-8'
+    return data
 
 
 class APIStatusCode(object):
