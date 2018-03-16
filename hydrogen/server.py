@@ -46,12 +46,12 @@ def landing():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 200
+    return '404', 200
 
 
 @app.errorhandler(500)
 def server_error(e):
-    return render_template('500.html'), 200
+    return '500', 200
 
 
 def run_server():

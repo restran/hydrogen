@@ -3,3 +3,4 @@ jinja2
 flask
 mountains>=0.3.17
 pywebview
+pycipher
