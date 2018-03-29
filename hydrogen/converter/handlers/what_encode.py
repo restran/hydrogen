@@ -14,7 +14,7 @@ from functools import cmp_to_key
 from future.moves.urllib.parse import unquote_plus
 from mountains import PY3, PY2
 from mountains.encoding import utf8, to_unicode
-
+from ...crypto.handlers.rot13 import decode_rot13
 from converter.handlers.converter import partial_base64_decode, \
     partial_base32_decode, partial_base16_decode, base_padding, hex2str
 
@@ -47,6 +47,7 @@ encode_methods = [
     'decimal_ascii',
     'decimal',  # 10 进制数据，转成16进制
     'zlib',
+    'rot13',
     'pawn_shop',  # 当铺密码
     'switch_case',  # 大小写交换
     'reverse_alphabet',  # 字母表逆序
@@ -201,6 +202,11 @@ class WhatEncode(object):
                     decode_str = b85decode(utf8(encode_str))
                 else:
                     return False, encode_str
+            elif decode_method == 'rot13':
+                # 如果这里不做限制，会无限递归下去
+                if 'rot13' in m_list:
+                    return False, raw_encode_str
+                decode_str = decode_rot13(encode_str)
             elif decode_method == 'pawn_shop':
                 try:
                     encode_str = encode_str.decode('gb2312')

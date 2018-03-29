@@ -1,5 +1,6 @@
 requests
 bottle
+future
 mountains>=0.3.17
 pywebview
 pycipher
