@@ -20,4 +20,3 @@ def init_url_rules(app: Bottle, url_map_list=url_handlers):
             methods = None
 
         app.route(path=u[0], method=methods, callback=u[1])
-        # app.add_route(Route(app, rule=u[0], method=methods,  callback=u[1]))
