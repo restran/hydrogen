@@ -28,7 +28,7 @@ def decode(e, verbose=False):
         d = ''
         for i in range(b):
             d = d + r[i]
-        x = '分为\t' + str(f) + '\t' + '栏时，解密结果为: ' + d
+        x = '%02d栏: %s' % (f, d)
         result.append(x)
         p.print(x)
 
