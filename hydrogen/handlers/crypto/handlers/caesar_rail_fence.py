@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from crypto.handlers.caesar import decode as caesar_decode
-from crypto.handlers.rail_fence import decode as rail_fence_decode
+from handlers.crypto.handlers.caesar import decode as caesar_decode
+from handlers.crypto.handlers.rail_fence import decode as rail_fence_decode
 from mountains.util import PrintCollector
 
 """

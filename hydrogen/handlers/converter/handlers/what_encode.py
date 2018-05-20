@@ -16,9 +16,9 @@ from future.moves.urllib.parse import unquote_plus
 from mountains import PY3, PY2
 from mountains.encoding import utf8, to_unicode
 
-from converter.handlers.converter import partial_base64_decode, \
+from handlers.converter.handlers.converter import partial_base64_decode, \
     partial_base32_decode, partial_base16_decode, base_padding, hex2str
-from crypto.handlers.rot13 import decode_rot13
+from handlers.crypto.handlers.rot13 import decode_rot13
 
 logger = logging.getLogger(__name__)
 

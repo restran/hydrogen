@@ -1,6 +1,7 @@
 requests
 bottle
 future
-mountains>=0.3.17
+pycryptodome
+mountains>=0.5.3
 pywebview
 pycipher

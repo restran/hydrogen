@@ -7,8 +7,8 @@ import logging
 from bottle import request
 from mountains import text_type
 
-from converter.handlers import converter, what_encode as what_encode_handler
-from converter.handlers.what_code_scheme import detect_code_scheme
+from handlers.converter.handlers import converter, what_encode as what_encode_handler
+from handlers.converter.handlers.what_code_scheme import detect_code_scheme
 from utils import APIHandler
 
 logger = logging.getLogger(__name__)

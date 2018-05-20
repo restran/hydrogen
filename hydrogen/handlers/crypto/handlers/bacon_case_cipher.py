@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import re
 import string
-from copy import deepcopy
-from crypto.handlers.bacon_cipher import decode_method_1, decode_method_2
+
 from mountains.util import PrintCollector
+
+from handlers.crypto.handlers.bacon_cipher import decode_method_1, decode_method_2
 
 
 def decode(data, verbose=False):

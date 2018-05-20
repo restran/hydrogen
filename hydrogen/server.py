@@ -3,7 +3,6 @@
 from __future__ import unicode_literals, absolute_import
 
 import os
-
 from bottle import Bottle, run
 from bottle import static_file
 from mountains import logging

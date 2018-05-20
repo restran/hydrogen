@@ -3,7 +3,7 @@
 from __future__ import unicode_literals, absolute_import
 from mountains.util import PrintCollector
 from mountains import text_type, force_bytes, force_text
-from converter.handlers.converter import hex2str
+from handlers.converter.handlers.converter import hex2str
 
 cipher_letters = '+-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 
