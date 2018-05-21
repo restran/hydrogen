@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2017/10/13
 from __future__ import unicode_literals, absolute_import
-from bottle import Bottle, Route
+
+from bottle import Bottle
+
 from handlers.converter import api as converter_api
 from handlers.crypto import api as crypto_api
 from handlers.http import api as http_api

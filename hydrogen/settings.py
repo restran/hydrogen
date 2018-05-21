@@ -3,7 +3,7 @@
 from __future__ import unicode_literals, absolute_import
 
 APP_NAME = 'Hydrogen'
-VERSION = '0.3.0'
+VERSION = '0.4.0'
 
 DEBUG = True
 PORT = 8000

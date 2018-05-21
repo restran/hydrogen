@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from mountains.util import PrintCollector
+from mountains.utils import PrintCollector
 
 """
 凯撒密码，实现 33-126 ASCII 可打印的字符循环平移  

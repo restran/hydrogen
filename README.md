@@ -22,11 +22,21 @@ release 页面的 Windows 可执行程序，目前是在 Windows10 环境下用 
 
     pip3 install -r requirements.txt 
 
+
+Windows
+
+    pip3 install pywebview[winforms]
+
+Linux
+
+    pip3 install pywebview[gtk3]
+
+Mac
+
+    pip3 install pywebview[cocoa]
+    pip3 install PyQt5
+
 在 hydrogen 目录下运行
-
-    py -3.6 -m server.py
-
-或者
 
     python3 server.py
 
@@ -48,7 +58,7 @@ Windows 环境下可以使用 pyinstaller 打包成一个文件
 
 ## Build Mac Binary
 
-Mac 环境下可以使用 [py2app](https://pypi.python.org/pypi/py2app/) 来打包，可以参考[这篇文章](http://www.jianshu.com/p/afb6b2b97ce9)。py2app 使用 0.14 版本打包有问题，可以降级到 0.12 版本。
+Mac 环境下可以使用 [py2app](https://pypi.python.org/pypi/py2app/) 来打包，可以参考[这篇文章](http://www.jianshu.com/p/afb6b2b97ce9)。py2app 使用 0.14 和 0.15 版本打包有问题，可以降级到 0.12 版本。
 
 py2app 提供了“别名模式”，该模式通过与开发文件象征性的链接构建应用，测试和开发的时候使用。
 
@@ -61,6 +71,11 @@ py2app 提供了“别名模式”，该模式通过与开发文件象征性的�
     
 图标要使用 icns 格式 [IconFinder](https://www.iconfinder.com/) 和 [freepik](http://www.freepik.com/free-icons) 下载
 
+### Mac 下调试
+
+如果出现无法运行，可以在打包后的程序，显示包内容，然后在命令行下面运行
+
+    dist/Hydrogen.app/Contents/MacOS/Hydrogen
 
 ## 类似项目
 

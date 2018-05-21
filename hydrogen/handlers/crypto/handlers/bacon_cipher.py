@@ -3,7 +3,7 @@
 import re
 import string
 from copy import deepcopy
-from mountains.util import PrintCollector
+from mountains.utils import PrintCollector
 
 alphabet = string.ascii_letters.upper()
 

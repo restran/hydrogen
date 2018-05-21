@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2017/7/17
 from __future__ import unicode_literals, absolute_import
-from mountains.util import PrintCollector
+from mountains.utils import PrintCollector
 from mountains import text_type, force_bytes, force_text
 from handlers.converter.handlers.converter import hex2str
 

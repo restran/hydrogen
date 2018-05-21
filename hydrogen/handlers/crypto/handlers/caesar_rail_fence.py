@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 from handlers.crypto.handlers.caesar import decode as caesar_decode
 from handlers.crypto.handlers.rail_fence import decode as rail_fence_decode
-from mountains.util import PrintCollector
+from mountains.utils import PrintCollector
 
 """
 凯撒困在栅栏里了,需要你的帮助。

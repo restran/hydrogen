@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import string
 
-from mountains.util import PrintCollector
+from mountains.utils import PrintCollector
 
 from handlers.crypto.handlers.bacon_cipher import decode_method_1, decode_method_2
 

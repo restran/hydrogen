@@ -24,9 +24,11 @@ OPTIONS = {
     'strip': True,
     'resources': ['static', 'templates'],
     'iconfile': 'assets/icon.icns',
+    'excludes': [],
     'includes': ['WebKit', 'Foundation', 'webview'],
     'packages': [
-        'jinja2'
+        'Crypto',  # 需要在这里配置，否则 .so 文件不会导入
+        '_sysconfigdata_m_darwin_darwin'  # 因为sysconfig是动态导入的，无法识别出来
     ],
     'plist': {
         'CFBundleName': APP_NAME,
@@ -35,7 +37,7 @@ OPTIONS = {
         'CFBundleIdentifier': "net.restran.mac.%s" % APP_NAME.lower(),
         'CFBundleVersion': VERSION,
         'CFBundleShortVersionString': VERSION,
-        'NSHumanReadableCopyright': "Copyright © 2017, Restran, All Rights Reserved"
+        'NSHumanReadableCopyright': "Copyright © 2018, Restran, All Rights Reserved"
     }
 }
 

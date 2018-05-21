@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2017/9/15
 from __future__ import unicode_literals, absolute_import
-from mountains.util import PrintCollector
+from mountains.utils import PrintCollector
 """
 影子密码
 
