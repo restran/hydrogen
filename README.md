@@ -22,7 +22,6 @@ release 页面的 Windows 可执行程序，目前是在 Windows10 环境下用 
 
     pip3 install -r requirements.txt 
 
-
 Windows
 
     pip3 install pywebview[winforms]
@@ -48,13 +47,9 @@ Mac
 
 ## Build Windows Binary
 
-Windows 环境下可以使用 pyinstaller 打包成一个文件
+Windows 环境下可以使用 pyinstaller 打包成一个文件，不显示控制台，设置图标
 
-    pyinstaller --onefile main.py
-
-打包成一个文件，不显示控制台，设置图标
-
-    pyinstaller --onefile --windowed --icon=assets/icon.ico main.py
+    pyinstaller --onefile --windowed --exclude-module=django --add-data="static;static" --add-data="templates;templates" --icon=assets/icon.ico main.py 
 
 ## Build Mac Binary
 

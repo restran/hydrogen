@@ -1,7 +1,7 @@
 requests
 bottle
 future
-pycryptodome
+pycryptodomex
 mountains>=0.5.4
 pywebview
 pycipher

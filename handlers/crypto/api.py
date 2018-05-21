@@ -7,8 +7,6 @@ import logging
 from handlers.crypto import handlers
 from utils import APIHandler
 from bottle import get, post, request
-from Crypto.PublicKey import RSA
-from Crypto.Util.number import inverse
 from .utils import make_private_key_pem, make_public_key_pem, \
     read_rsa_pem_key, rsa_decrypt, rsa_encrypt
 

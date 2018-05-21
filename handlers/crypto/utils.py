@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # created by restran on 2018/05/18
 from __future__ import unicode_literals, absolute_import
-from Crypto.PublicKey import RSA
-from Crypto.Util.number import inverse
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Util.number import inverse
 from ..converter.handlers.converter import hex2dec
 
 
