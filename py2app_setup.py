@@ -27,7 +27,7 @@ OPTIONS = {
     'excludes': [],
     'includes': ['WebKit', 'Foundation', 'webview'],
     'packages': [
-        'Crypto',  # 需要在这里配置，否则 .so 文件不会导入
+        'Cryptodome',  # 需要在这里配置，否则 .so 文件不会导入
         '_sysconfigdata_m_darwin_darwin'  # 因为sysconfig是动态导入的，无法识别出来
     ],
     'plist': {
