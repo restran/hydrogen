@@ -8,10 +8,41 @@ from handlers.crypto import handlers
 from utils import APIHandler
 from bottle import get, post, request
 from future.moves.urllib.parse import urlparse, urljoin
-from mountains.http import read_request_from_str, request as do_request
+from mountains.http import read_request_from_str, random_agent
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+def do_request(method, url, headers=None, data=None, session=None):
+    """
+    :type session requests.session
+    :param method:
+    :param url:
+    :param headers:
+    :param data:
+    :param session:
+    :return:
+    """
+    base_headers = {
+        'User-Agent': random_agent()
+    }
+    if headers is None:
+        headers = {}
+
+    base_headers.update(headers)
+
+    if 'Content-Length' in headers:
+        del base_headers['Content-Length']
+
+    headers = base_headers
+    if session is not None:
+        req = session.request
+    else:
+        req = requests.request
+
+    r = req(method, url, headers=headers, data=data, verify=False, allow_redirects=False)
+    return r
 
 
 def http_request():
