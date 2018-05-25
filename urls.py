@@ -15,6 +15,7 @@ url_handlers = [
     ('/api/crypto/rsa-from-pem-key/', crypto_api.rsa_from_pem_key, ['POST']),
     ('/api/crypto/rsa-to-pem-key/', crypto_api.rsa_to_pem_key, ['POST']),
     ('/api/crypto/rsa-encrypt-decrypt/', crypto_api.rsa_encrypt_decrypt, ['POST']),
+    ('/api/crypto/aes-encrypt-decrypt/', crypto_api.aes_encrypt_decrypt, ['POST']),
     ('/api/http/request/', http_api.http_request, ['POST'])
 ]
 

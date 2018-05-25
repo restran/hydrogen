@@ -8,7 +8,8 @@ from handlers.crypto import handlers
 from utils import APIHandler
 from bottle import get, post, request
 from .utils import make_private_key_pem, make_public_key_pem, \
-    read_rsa_pem_key, rsa_decrypt, rsa_encrypt
+    read_rsa_pem_key, rsa_decrypt, rsa_encrypt, AESHelper
+from mountains import text_type, force_text
 
 logger = logging.getLogger(__name__)
 
@@ -202,6 +203,48 @@ def rsa_encrypt_decrypt():
     data = {
         'plain': str(plain),
         'cipher': str(cipher),
+    }
+
+    return APIHandler.success(data)
+
+
+def aes_encrypt_decrypt():
+    """
+    aes 加解密
+    :return:
+    """
+
+    if request.json is None:
+        return APIHandler.fail()
+
+    action = request.json.get('action', '')
+    key = request.json.get('key', '')
+    key_encoding = request.json.get('key_encoding', '')
+    mode = request.json.get('mode', '')
+    iv = request.json.get('iv', '')
+    iv_encoding = request.json.get('iv_encoding', '')
+    padding = request.json.get('padding', '')
+    plain_encoding = request.json.get('plain_encoding', '')
+    cipher_encoding = request.json.get('cipher_encoding', '')
+    plain = request.json.get('plain', '')
+    cipher = request.json.get('cipher', '')
+
+    try:
+        aes = AESHelper(key, iv, key_encoding, iv_encoding, mode,
+                        padding, plain_encoding, cipher_encoding)
+        if action == 'decrypt':
+            plain = aes.decrypt(cipher)
+        else:
+            cipher = aes.encrypt(plain)
+    except Exception as e:
+        logger.exception(e)
+        msg = '%s, %s' % ('AES加解密失败', e)
+
+        return APIHandler.fail(msg=msg)
+
+    data = {
+        'plain': text_type(plain),
+        'cipher': text_type(cipher),
     }
 
     return APIHandler.success(data)

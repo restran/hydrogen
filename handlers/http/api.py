@@ -14,8 +14,11 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-def do_request(method, url, headers=None, data=None, session=None):
+def do_request(method, url, headers=None, data=None, session=None,
+               verify=False, allow_redirects=False):
     """
+    :param allow_redirects:
+    :param verify:
     :type session requests.session
     :param method:
     :param url:
@@ -24,15 +27,16 @@ def do_request(method, url, headers=None, data=None, session=None):
     :param session:
     :return:
     """
-    base_headers = {
-        'User-Agent': random_agent()
-    }
-    if headers is None:
+    base_headers = {}
+
+    if headers is None or not isinstance(headers, dict):
         headers = {}
+    elif 'User-Agent' not in headers:
+        headers['User-Agent'] = random_agent()
 
     base_headers.update(headers)
 
-    if 'Content-Length' in headers:
+    if 'Content-Length' in base_headers:
         del base_headers['Content-Length']
 
     headers = base_headers
@@ -41,7 +45,8 @@ def do_request(method, url, headers=None, data=None, session=None):
     else:
         req = requests.request
 
-    r = req(method, url, headers=headers, data=data, verify=False, allow_redirects=False)
+    r = req(method, url, headers=headers, data=data,
+            verify=verify, allow_redirects=allow_redirects)
     return r
 
 
