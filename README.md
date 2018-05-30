@@ -49,7 +49,11 @@ Mac
 
 Windows 环境下可以使用 pyinstaller 打包成一个文件，不显示控制台，设置图标
 
-    pyinstaller --onefile --windowed --exclude-module=django --add-data="static;static" --add-data="templates;templates" --icon=assets/icon.ico main.py 
+    pyinstaller --onefile --windowed --exclude-module=django --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --icon=assets/icon.ico main.py
+    
+如果遇到问题需要调试，可以显示命令行
+
+    pyinstaller --onefile --exclude-module=django --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --icon=assets/icon.ico main.py
 
 ## Build Mac Binary
 

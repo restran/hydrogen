@@ -2,15 +2,23 @@
 # Created by restran on 2017/7/17
 from __future__ import unicode_literals, absolute_import
 
-import os
-from bottle import Bottle, run
+import tornado.gen
+import tornado.httpclient
+import tornado.httpserver
+import tornado.ioloop
+import tornado.options
+
+import tornado.web
+from bottle import Bottle
 from bottle import static_file
 from mountains import logging
 from mountains.logging import StreamHandler, RotatingFileHandler
+from tornado.options import options
+import records
 
 import settings
 from settings import get_path
-from urls import init_url_rules
+from urls import url_handlers
 
 if settings.DEBUG:
     level = logging.DEBUG
@@ -37,20 +45,37 @@ def landing():
     return static_file('index.html', get_path('templates'))
 
 
-@app.error(500)
-def error404(e):
-    return '500 %s' % e
+# @app.error(500)
+# def error404(e):
+#     return '500 %s' % e
+#
+#
+# @app.error(404)
+# def error404(e):
+#     return '404 %s ' % e
 
 
-@app.error(404)
-def error404(e):
-    return '404 %s ' % e
+class Application(tornado.web.Application):
+    def __init__(self):
+        tornado_settings = dict(
+            debug=False,
+            static_path=get_path('static'),
+        )
+        self.database = records.Database('sqlite:///database.db')
+        tornado.web.Application.__init__(self, url_handlers, **tornado_settings)
+
+
+app = Application()
 
 
 def run_server():
-    init_url_rules(app)
-    run(app, host='127.0.0.1', port=settings.PORT, debug=False)
-    # app.run(host="127.0.0.1", port=settings.PORT, threaded=True)
+    # 为了能在线程中启动 tornado 的 event_loop
+    import asyncio
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    http_server = tornado.httpserver.HTTPServer(app, xheaders=True)
+    http_server.listen(settings.PORT, settings.HOST)
+    logger.info('hydrogen server is running on %s:%s' % (settings.HOST, settings.PORT))
+    tornado.ioloop.IOLoop.instance().start()
 
 
 if __name__ == "__main__":

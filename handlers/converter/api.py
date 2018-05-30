@@ -4,7 +4,6 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 
-from bottle import request
 from mountains import text_type
 
 from handlers.converter.handlers import converter, what_encode as what_encode_handler
@@ -59,50 +58,52 @@ def do_convert(method, data, params):
     return result
 
 
-def convert_data():
-    if request.json is None:
-        return APIHandler.fail()
+class ConvertData(APIHandler):
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
 
-    method = request.json.get('method')
-    data = request.json.get('data')
-    params = request.json.get('params')
-    if method is None or data is None:
-        return APIHandler.fail()
+        method = self.request.json.get('method')
+        data = self.request.json.get('data')
+        params = self.request.json.get('params')
+        if method is None or data is None:
+            return self.fail()
 
-    try:
-        result = do_convert(method, data, params)
-    except Exception as e:
-        logger.exception(e)
-        result = '!!!error!!! %s' % e
+        try:
+            result = do_convert(method, data, params)
+        except Exception as e:
+            logger.exception(e)
+            result = '!!!error!!! %s' % e
 
-    if result is None:
-        result = '!!!error!!!'
-    return APIHandler.success(result)
+        if result is None:
+            result = '!!!error!!!'
+        return self.success(result)
 
 
-def what_encode():
-    if request.json is None:
-        return APIHandler.fail()
+class WhatEncode(APIHandler):
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
 
-    max_depth = request.json.get('max_depth')
-    data = request.json.get('data')
-    # params = request.json.get('params')
-    if max_depth is None or data is None:
-        return APIHandler.fail()
+        max_depth = self.request.json.get('max_depth')
+        data = self.request.json.get('data')
+        # params = request.json.get('params')
+        if max_depth is None or data is None:
+            return self.fail()
 
-    result = {}
-    try:
-        result['scheme_list'] = detect_code_scheme(data)
-    except Exception as e:
-        logger.exception(e)
-        result['scheme_list'] = '!!!error!!! %s' % e
+        result = {}
+        try:
+            result['scheme_list'] = detect_code_scheme(data)
+        except Exception as e:
+            logger.exception(e)
+            result['scheme_list'] = '!!!error!!! %s' % e
 
-    try:
-        result['result'] = what_encode_handler.decode(data, max_depth)
-        if result['result'] is None:
-            result['result'] = '!!!error!!!'
-    except Exception as e:
-        logger.exception(e)
-        result['result'] = '!!!error!!! %s' % e
+        try:
+            result['result'] = what_encode_handler.decode(data, max_depth)
+            if result['result'] is None:
+                result['result'] = '!!!error!!!'
+        except Exception as e:
+            logger.exception(e)
+            result['result'] = '!!!error!!! %s' % e
 
-    return APIHandler.success(result)
+        return self.success(result)

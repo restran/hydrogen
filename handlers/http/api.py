@@ -7,12 +7,11 @@ import time
 from threading import Thread
 
 import requests
-from bottle import request
 from future.moves.urllib.parse import urlparse, urljoin
 from mountains.http import read_request_from_str, random_agent
 
+from handlers.http.proxy.proxy import ProxyServer, ProxyHandler
 from utils import APIHandler
-from .proxy.proxy import ProxyServer, ProxyHandler
 
 logger = logging.getLogger(__name__)
 
@@ -56,87 +55,90 @@ def do_request(method, url, headers=None, data=None, session=None,
 proxy_server = None
 
 
-def http_request():
-    if request.json is None:
-        return APIHandler.fail()
+class HTTPRequest(APIHandler):
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
 
-    netloc = request.json.get('netloc', '').strip()
-    request_data = request.json.get('request', '').lstrip()
-    if netloc == '':
-        return APIHandler.fail(msg='请求的网址不能为空')
-    if netloc == '' or request_data == '':
-        return APIHandler.fail(msg='请求的数据不能为空')
+        netloc = self.request.json.get('netloc', '').strip()
+        request_data = self.request.json.get('request', '').lstrip()
+        if netloc == '':
+            return self.fail(msg='请求的网址不能为空')
+        if netloc == '' or request_data == '':
+            return self.fail(msg='请求的数据不能为空')
 
-    try:
-        url_parsed = urlparse(netloc)
-        url = '%s://%s' % (url_parsed.scheme, url_parsed.netloc)
-        headers, method, uri, host, body = read_request_from_str(request_data)
-        url = urljoin(url, uri)
-        r = do_request(method, url, headers, body)
-        response_data = []
-        for k, v in r.headers.items():
-            response_data.append('%s: %s' % (k, v))
+        try:
+            url_parsed = urlparse(netloc)
+            url = '%s://%s' % (url_parsed.scheme, url_parsed.netloc)
+            headers, method, uri, host, body = read_request_from_str(request_data)
+            url = urljoin(url, uri)
+            r = do_request(method, url, headers, body)
+            response_data = []
+            for k, v in r.headers.items():
+                response_data.append('%s: %s' % (k, v))
 
-        response_data.append('')
-        response_data.append(r.text)
-        result = '\n'.join(response_data)
-    except Exception as e:
-        logger.exception(e)
-        result = '!!!error!!! %s' % e
+            response_data.append('')
+            response_data.append(r.text)
+            result = '\n'.join(response_data)
+        except Exception as e:
+            logger.exception(e)
+            result = '!!!error!!! %s' % e
 
-    if result is None:
-        result = '!!!error!!!'
+        if result is None:
+            result = '!!!error!!!'
 
-    return APIHandler.success(result)
-
-
-def http_proxy():
-    if request.json is None:
-        return APIHandler.fail()
-
-    listen_ip = request.json.get('listen_ip', '').strip()
-    listen_port = request.json.get('listen_port', '').strip()
-    upstream_ip = request.json.get('upstream_ip', '').strip()
-    upstream_port = request.json.get('upstream_port', '').strip()
-    action = request.json.get('action', '').strip()
-
-    if listen_ip == '' or listen_port == '':
-        return APIHandler.fail(msg='监听地址不能为空')
-
-    if upstream_ip == '':
-        upstream_ip = None
-
-    if upstream_port == '':
-        upstream_port = None
-
-    global proxy_server
-    if action == 'stop':
-        if proxy_server is not None:
-            proxy_server.stop()
-            time.sleep(3)
-            proxy_server = None
-    else:
-        if proxy_server is None:
-            proxy_server = ProxyServer(ProxyHandler, listen_ip, listen_port, upstream_ip, upstream_port)
-            try:
-                Thread(target=proxy_server.start).start()
-            except Exception as e:
-                logger.exception(e)
-                result = '!!!error!!! %s' % e
-
-    return APIHandler.success()
+        return self.success(result)
 
 
-def http_interceptor():
-    if request.json is None:
-        return APIHandler.fail()
+class HTTPProxy(APIHandler):
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
 
-    name = request.json.get('name', '').strip()
-    code = request.json.get('code', '')
-    entry_id = request.json.get('id', None)
+        listen_ip = self.request.json.get('listen_ip', '').strip()
+        listen_port = self.request.json.get('listen_port', '').strip()
+        upstream_ip = self.request.json.get('upstream_ip', '').strip()
+        upstream_port = self.request.json.get('upstream_port', '').strip()
+        action = self.request.json.get('action', '').strip()
 
-    if name == '' or code == '':
-        return APIHandler.fail(msg='名称或代码不能为空')
+        if listen_ip == '' or listen_port == '':
+            return self.fail(msg='监听地址不能为空')
 
-    
-    return APIHandler.success()
+        if upstream_ip == '':
+            upstream_ip = None
+
+        if upstream_port == '':
+            upstream_port = None
+
+        global proxy_server
+        if action == 'stop':
+            if proxy_server is not None:
+                proxy_server.stop()
+                time.sleep(3)
+                proxy_server = None
+        else:
+            if proxy_server is None:
+                proxy_server = ProxyServer(ProxyHandler, None, listen_ip, listen_port, upstream_ip, upstream_port)
+                try:
+                    Thread(target=proxy_server.start).start()
+                except Exception as e:
+                    logger.exception(e)
+                    result = '!!!error!!! %s' % e
+                    return self.fail(msg=result)
+
+        return self.success()
+
+
+class HTTPInterceptor(APIHandler):
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
+
+        name = self.request.json.get('name', '').strip()
+        code = self.request.json.get('code', '')
+        entry_id = self.request.json.get('id', None)
+
+        if name == '' or code == '':
+            return self.fail(msg='名称或代码不能为空')
+
+        return self.success()

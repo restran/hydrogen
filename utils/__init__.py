@@ -5,23 +5,12 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import socket
 import string
-from mountains import json
-from bottle import response
 from importlib import import_module
 
+from mountains import json
+from tornado.web import RequestHandler
+
 logger = logging.getLogger(__name__)
-
-
-def jsonify(code, data, msg):
-    data = {
-        'data': data,
-        'code': code,
-        'msg': msg
-    }
-    data = json.dumps(data)
-
-    response.content_type = 'application/json; charset=utf-8'
-    return data
 
 
 class APIStatusCode(object):
@@ -31,30 +20,68 @@ class APIStatusCode(object):
     LOGIN_REQUIRED = 401  # 需要登录才能访问
 
 
-class APIHandler(object):
-    @classmethod
-    def return_json(cls, code, data, msg):
+class APIHandler(RequestHandler):
+    def data_received(self, chunk):
+        pass
+
+    def __init__(self, app, request, **kwargs):
+        super(APIHandler, self).__init__(app, request, **kwargs)
+        self.database = app.database
+        self.post_data = {}
+
+    def return_json(self, code, data, msg):
         try:
-            return jsonify(code=code, data=data, msg=msg)
+            result = json.dumps({
+                'data': data,
+                'code': code,
+                'msg': msg
+            })
         except Exception as e:
             logger.error(e)
-            return jsonify(code=APIStatusCode.ERROR, data=data, msg=msg)
+            result = json.dumps({
+                'data': data,
+                'code': APIStatusCode.ERROR,
+                'msg': msg
+            })
 
-    @classmethod
-    def success(cls, data=None, msg='', code=APIStatusCode.SUCCESS):
-        return cls.return_json(code, data, msg)
+        self.set_header("Content-Type", "application/json; charset=utf-8")
+        self.write(result)
+        self.finish()
 
-    @classmethod
-    def fail(cls, data=None, msg='', code=APIStatusCode.FAIL):
-        return cls.return_json(code, data, msg)
+    def initialize(self, *args, **kwargs):
+        pass
 
-    @classmethod
-    def login_required(cls, data=None, msg='', code=APIStatusCode.LOGIN_REQUIRED):
-        return cls.return_json(code, data, msg)
+    def prepare(self):
+        self.request.json = {}
+        if self.request.method == 'POST':
+            content_type = self.request.headers.get('Content-Type', '').split(';')[0]
+            if content_type == 'application/json':
+                try:
+                    self.request.json = json.loads(self.request.body)
+                except Exception as e:
+                    logger.error(e)
 
-    @classmethod
-    def error(cls, data=None, msg='', code=APIStatusCode.ERROR):
-        return cls.return_json(code, data, msg)
+    def success(self, data=None, msg='', code=APIStatusCode.SUCCESS):
+        return self.return_json(code, data, msg)
+
+    def fail(self, data=None, msg='', code=APIStatusCode.FAIL):
+        return self.return_json(code, data, msg)
+
+    def login_required(self, data=None, msg='', code=APIStatusCode.LOGIN_REQUIRED):
+        return self.return_json(code, data, msg)
+
+    def error(self, data=None, msg='', code=APIStatusCode.ERROR):
+        return self.return_json(code, data, msg)
+
+    def write_error(self, status_code, **kwargs):
+        self.clear()
+        self.set_status(status_code)
+        # 因为执行了 clear，所以把 header 也清理掉了
+        self.set_header("Content-Type", "application/json; charset=utf-8")
+        self.error(
+            msg='Internal Server Error' if status_code == 200 else self._reason,
+            code=APIStatusCode.ERROR
+        )
 
 
 def is_port_open(ip, port):

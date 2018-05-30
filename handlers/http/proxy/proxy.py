@@ -23,7 +23,7 @@ from tornado.httputil import HTTPHeaders
 from tornado.web import RequestHandler
 from tornado.web import asynchronous
 
-from .utils import wrap_socket
+from handlers.http.proxy.utils import wrap_socket
 
 logger = logging.getLogger(__name__)
 
@@ -288,6 +288,7 @@ class ProxyHandler(RequestHandler):
 
 class ProxyServer(object):
     def __init__(self, handler,
+                 database,
                  interceptor_source_code,
                  listen_ip="0.0.0.0",
                  listen_port=8088,
@@ -303,6 +304,7 @@ class ProxyServer(object):
         self.application.proxy_port = proxy_port
         self.application.intercept_https = True
         self.application.interceptor_cls = self.load_interceptor(interceptor_source_code)
+        self.application.database = database
 
         global server
         server = tornado.httpserver.HTTPServer(self.application, decompress_request=True)
@@ -312,13 +314,12 @@ class ProxyServer(object):
     def start(self):
         logger.info('proxy start')
         # 为了能在线程中启动 tornado 的 event_loop
-        # import asyncio
-        # asyncio.set_event_loop(asyncio.new_event_loop())
+        import asyncio
+        asyncio.set_event_loop(asyncio.new_event_loop())
         try:
             self.server.listen(self.application.listen_port, self.application.listen_ip)
             self.instance = tornado.ioloop.IOLoop.instance()
             self.instance.start()
-            self.server.stop()
             logger.warning("Shutting down the IOLoop")
         except Exception as e:
             logger.exception(e)
@@ -326,25 +327,32 @@ class ProxyServer(object):
     def stop(self):
         if self.instance is not None:
             self.instance.stop()
+            self.server.stop()
 
         logger.warning("Shutting down the proxy server")
 
     def load_interceptor(self, source):
+        if source in (None, ''):
+            return None
+
         from mountains import text_type
         import imp
         import uuid
-        mod_name = 'Interceptor_%s' % text_type(uuid.uuid4()).replace('-', '')
-        mod = sys.modules.setdefault(mod_name, imp.new_module(mod_name))
-        code = compile(source, '<string>', 'exec')
-        # mod.__file__ = mod_name
-        mod.__package__ = ''
-        exec(code, mod.__dict__)
-        return getattr(mod, 'Interceptor', None)
+        try:
+            mod_name = 'Interceptor_%s' % text_type(uuid.uuid4()).replace('-', '')
+            mod = sys.modules.setdefault(mod_name, imp.new_module(mod_name))
+            code = compile(source, '<string>', 'exec')
+            # mod.__file__ = mod_name
+            mod.__package__ = ''
+            exec(code, mod.__dict__)
+            return getattr(mod, 'Interceptor', None)
+        except:
+            return None
 
 
 if __name__ == "__main__":
     interceptor_code = open('./addons/test1.py').read()
-    proxy = ProxyServer(ProxyHandler, interceptor_code)
+    proxy = ProxyServer(None, ProxyHandler, interceptor_code)
     try:
         proxy.start()
     except KeyboardInterrupt:

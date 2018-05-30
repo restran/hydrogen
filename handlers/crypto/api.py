@@ -4,12 +4,12 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 
+from mountains import text_type
+
 from handlers.crypto import handlers
 from utils import APIHandler
-from bottle import get, post, request
 from .utils import make_private_key_pem, make_public_key_pem, \
     read_rsa_pem_key, rsa_decrypt, rsa_encrypt, AESHelper
-from mountains import text_type, force_text
 
 logger = logging.getLogger(__name__)
 
@@ -67,29 +67,29 @@ def do_decode(method, data, params):
     return result
 
 
-def decode_data():
-    if request.json is None:
-        return APIHandler.fail()
+class DecodeData(APIHandler):
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
+        method = self.request.json.get('method')
+        data = self.request.json.get('data')
+        params = self.request.json.get('params')
+        if method is None or data is None:
+            return self.fail()
 
-    method = request.json.get('method')
-    data = request.json.get('data')
-    params = request.json.get('params')
-    if method is None or data is None:
-        return APIHandler.fail()
+        try:
+            result = do_decode(method, data, params)
+        except Exception as e:
+            logger.exception(e)
+            result = '!!!error!!! %s' % e
 
-    try:
-        result = do_decode(method, data, params)
-    except Exception as e:
-        logger.exception(e)
-        result = '!!!error!!! %s' % e
+        if result is None:
+            result = '!!!error!!!'
 
-    if result is None:
-        result = '!!!error!!!'
-
-    return APIHandler.success(result)
+        return self.success(result)
 
 
-def rsa_from_pem_key():
+class RSAFromPEMKey(APIHandler):
     """
     读取 PEM 格式的 rsa 密钥
     openssl中RSA私钥文件生成命令为：
@@ -98,153 +98,161 @@ def rsa_from_pem_key():
     openssl rsa -in private_rsa.pem -pubout -out public_rsa.pem
     :return:
     """
-    if request.json is None:
-        return APIHandler.fail()
 
-    key_content = request.json.get('key_content', '')
-    if key_content == '':
-        return APIHandler.fail(msg='RSA密钥不能为空')
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
 
-    try:
-        data = read_rsa_pem_key(key_content)
-    except Exception as e:
-        msg = '%s, %s' % ('识别失败', e)
-        return APIHandler.fail(msg=msg)
+        if self.request.json is None:
+            return self.fail()
 
-    return APIHandler.success(data)
+        key_content = self.request.json.get('key_content', '')
+        if key_content == '':
+            return self.fail(msg='RSA密钥不能为空')
+
+        try:
+            data = read_rsa_pem_key(key_content)
+        except Exception as e:
+            msg = '%s, %s' % ('识别失败', e)
+            return self.fail(msg=msg)
+
+        return self.success(data)
 
 
-def rsa_to_pem_key():
+class RSAToPEMKey(APIHandler):
     """
     转成 PEM 格式的 rsa 密钥
     :return:
     """
 
-    if request.json is None:
-        return APIHandler.fail()
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
 
-    n = request.json.get('n', '')
-    e = request.json.get('e', '')
-    p = request.json.get('p', '')
-    q = request.json.get('q', '')
+        n = self.request.json.get('n', '')
+        e = self.request.json.get('e', '')
+        p = self.request.json.get('p', '')
+        q = self.request.json.get('q', '')
 
-    if n == '':
-        return APIHandler.fail(msg='n不能为空')
-    if e == '':
-        return APIHandler.fail(msg='e不能为空')
+        if n == '':
+            return self.fail(msg='n不能为空')
+        if e == '':
+            return self.fail(msg='e不能为空')
 
-    if (p == '' and q != '') or (p != '' and q == ''):
-        return APIHandler.fail(msg='p和q不能为空')
+        if (p == '' and q != '') or (p != '' and q == ''):
+            return self.fail(msg='p和q不能为空')
 
-    try:
-        if p != '' and q != '':
-            key_content = make_private_key_pem(n, e, p, q)
-            is_private = True
-        else:
-            key_content = make_public_key_pem(n, e)
-            is_private = False
-    except Exception as e:
-        msg = '%s, %s' % ('转成PEM格式密钥失败', e)
+        try:
+            if p != '' and q != '':
+                key_content = make_private_key_pem(n, e, p, q)
+                is_private = True
+            else:
+                key_content = make_public_key_pem(n, e)
+                is_private = False
+        except Exception as e:
+            msg = '%s, %s' % ('转成PEM格式密钥失败', e)
 
-        return APIHandler.fail(msg=msg)
-    data = {
-        'key_content': key_content,
-        'n': n,
-        'e': e,
-        'p': p,
-        'q': q,
-        'is_private': is_private
-    }
+            return self.fail(msg=msg)
+        data = {
+            'key_content': key_content,
+            'n': n,
+            'e': e,
+            'p': p,
+            'q': q,
+            'is_private': is_private
+        }
 
-    return APIHandler.success(data)
+        return self.success(data)
 
 
-def rsa_encrypt_decrypt():
+class RSAEncryptDecrypt(APIHandler):
     """
     rsa 加解密
     :return:
     """
 
-    if request.json is None:
-        return APIHandler.fail()
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
 
-    n = request.json.get('n', '')
-    e = request.json.get('e', '')
-    p = request.json.get('p', '')
-    q = request.json.get('q', '')
-    plain = request.json.get('plain', '')
-    cipher = request.json.get('cipher', '')
-    action = request.json.get('action', '')
+        n = self.request.json.get('n', '')
+        e = self.request.json.get('e', '')
+        p = self.request.json.get('p', '')
+        q = self.request.json.get('q', '')
+        plain = self.request.json.get('plain', '')
+        cipher = self.request.json.get('cipher', '')
+        action = self.request.json.get('action', '')
 
-    if n == '':
-        return APIHandler.fail(msg='n不能为空')
-    if e == '':
-        return APIHandler.fail(msg='e不能为空')
+        if n == '':
+            return self.fail(msg='n不能为空')
+        if e == '':
+            return self.fail(msg='e不能为空')
 
-    if (p == '' and q != '') or (p != '' and q == ''):
-        return APIHandler.fail(msg='p和q不能为空')
+        if (p == '' and q != '') or (p != '' and q == ''):
+            return self.fail(msg='p和q不能为空')
 
-    try:
-        if action == 'decrypt':
-            if p != '' and q != '':
-                plain = rsa_decrypt(cipher, e, p, q)
+        try:
+            if action == 'decrypt':
+                if p != '' and q != '':
+                    plain = rsa_decrypt(cipher, e, p, q)
+                else:
+                    return self.fail(msg='p和q不能为空')
             else:
-                return APIHandler.fail(msg='p和q不能为空')
-        else:
-            if n != '' and e != '':
-                cipher = rsa_encrypt(plain, n, e)
-            else:
-                return APIHandler.fail(msg='n和e不能为空')
+                if n != '' and e != '':
+                    cipher = rsa_encrypt(plain, n, e)
+                else:
+                    return self.fail(msg='n和e不能为空')
 
-    except Exception as e:
-        msg = '%s, %s' % ('RSA加解密失败', e)
+        except Exception as e:
+            msg = '%s, %s' % ('RSA加解密失败', e)
 
-        return APIHandler.fail(msg=msg)
-    data = {
-        'plain': str(plain),
-        'cipher': str(cipher),
-    }
+            return self.fail(msg=msg)
+        data = {
+            'plain': str(plain),
+            'cipher': str(cipher),
+        }
 
-    return APIHandler.success(data)
+        return self.success(data)
 
 
-def aes_encrypt_decrypt():
+class AESEncryptDecrypt(APIHandler):
     """
     aes 加解密
     :return:
     """
 
-    if request.json is None:
-        return APIHandler.fail()
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
 
-    action = request.json.get('action', '')
-    key = request.json.get('key', '')
-    key_encoding = request.json.get('key_encoding', '')
-    mode = request.json.get('mode', '')
-    iv = request.json.get('iv', '')
-    iv_encoding = request.json.get('iv_encoding', '')
-    padding = request.json.get('padding', '')
-    plain_encoding = request.json.get('plain_encoding', '')
-    cipher_encoding = request.json.get('cipher_encoding', '')
-    plain = request.json.get('plain', '')
-    cipher = request.json.get('cipher', '')
+        action = self.request.json.get('action', '')
+        key = self.request.json.get('key', '')
+        key_encoding = self.request.json.get('key_encoding', '')
+        mode = self.request.json.get('mode', '')
+        iv = self.request.json.get('iv', '')
+        iv_encoding = self.request.json.get('iv_encoding', '')
+        padding = self.request.json.get('padding', '')
+        plain_encoding = self.request.json.get('plain_encoding', '')
+        cipher_encoding = self.request.json.get('cipher_encoding', '')
+        plain = self.request.json.get('plain', '')
+        cipher = self.request.json.get('cipher', '')
 
-    try:
-        aes = AESHelper(key, iv, key_encoding, iv_encoding, mode,
-                        padding, plain_encoding, cipher_encoding)
-        if action == 'decrypt':
-            plain = aes.decrypt(cipher)
-        else:
-            cipher = aes.encrypt(plain)
-    except Exception as e:
-        logger.exception(e)
-        msg = '%s, %s' % ('AES加解密失败', e)
+        try:
+            aes = AESHelper(key, iv, key_encoding, iv_encoding, mode,
+                            padding, plain_encoding, cipher_encoding)
+            if action == 'decrypt':
+                plain = aes.decrypt(cipher)
+            else:
+                cipher = aes.encrypt(plain)
+        except Exception as e:
+            logger.exception(e)
+            msg = '%s, %s' % ('AES加解密失败', e)
 
-        return APIHandler.fail(msg=msg)
+            return self.fail(msg=msg)
 
-    data = {
-        'plain': text_type(plain),
-        'cipher': text_type(cipher),
-    }
+        data = {
+            'plain': text_type(plain),
+            'cipher': text_type(cipher),
+        }
 
-    return APIHandler.success(data)
+        return self.success(data)

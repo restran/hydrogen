@@ -41,7 +41,7 @@ def main():
 
     max_count = 50
     logger.info("Checking server")
-    while not url_ok("http://127.0.0.1:%s" % settings.PORT) and max_count > 0:
+    while not url_ok("http://127.0.0.1:%s/" % settings.PORT) and max_count > 0:
         sleep(0.1)
         max_count -= 1
         logger.info('sleep...')

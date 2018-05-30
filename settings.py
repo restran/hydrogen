@@ -8,6 +8,7 @@ APP_NAME = 'Hydrogen'
 VERSION = '0.5.0'
 
 DEBUG = True
+HOST = '127.0.0.1'
 PORT = 8000
 
 PRODUCT_PORT = 23498
