@@ -17,8 +17,9 @@ url_handlers = [
     ('/api/crypto/rsa-encrypt-decrypt/', crypto_api.rsa_encrypt_decrypt, ['POST']),
     ('/api/crypto/aes-encrypt-decrypt/', crypto_api.aes_encrypt_decrypt, ['POST']),
     ('/api/http/request/', http_api.http_request, ['POST']),
-    ('/api/http/proxy/', http_api.http_proxy, ['POST'])
-    ('/api/http/proxy-interceptor/', http_api.http_interceptor, ['POST'])
+    ('/api/http/proxy/', http_api.http_proxy, ['POST']),
+    ('/api/http/proxy-interceptor-apply/', http_api.http_interceptor, ['POST']),
+    ('/api/http/proxy-interceptor/', http_api.http_interceptor, ['POST']),
 ]
 
 

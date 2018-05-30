@@ -138,4 +138,5 @@ def http_interceptor():
     if name == '' or code == '':
         return APIHandler.fail(msg='名称或代码不能为空')
 
+    
     return APIHandler.success()

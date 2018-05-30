@@ -2,11 +2,9 @@
 # Created by restran on 2018/5/29
 from __future__ import unicode_literals, absolute_import
 
-import asyncio
 import socket
 import ssl
 import sys
-from copy import copy
 
 import tornado.curl_httpclient
 import tornado.escape
@@ -17,6 +15,7 @@ import tornado.ioloop
 import tornado.iostream
 import tornado.web
 from mountains import logging
+from mountains.utils import ObjectDict
 from tornado import gen
 from tornado.gen import is_future
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
@@ -31,40 +30,19 @@ logger = logging.getLogger(__name__)
 ASYNC_HTTP_CONNECT_TIMEOUT = 60
 ASYNC_HTTP_REQUEST_TIMEOUT = 120
 
-# AsyncHTTPClient.configure('tornado.simple_httpclient.AsyncHTTPClient')
-
-_REQUEST, _RESPONSE, _FINISHED = 0, 1, 2
-
-# 拷贝 list
-copy_list = (lambda lb: copy(lb) if lb else [])
-
 
 class ProxyHandler(RequestHandler):
     SUPPORTED_METHODS = ['GET', 'POST', 'CONNECT', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
-    _call_mapper = {
-        _REQUEST: 'on_request',
-        _RESPONSE: 'on_response',
-        _FINISHED: 'on_finished',
-    }
 
     def __init__(self, application, request, **kwargs):
         super().__init__(application, request, **kwargs)
-        # 拷贝一份中间件的列表
-        self.middleware_list = copy_list(self.application.middleware_list)
         self.response_body = None
+        if self.application.interceptor_cls is not None:
+            self.interceptor = self.application.interceptor_cls(self)
+        else:
+            self.interceptor = None
 
-    def clear_nested_middleware(self, mw_class):
-        """
-        清除该中间件下级的所有中间件
-        :param mw_class:
-        :return:
-        """
-        # logger.debug('clear_nested_middleware')
-        # logger.debug(self.middleware_list)
-        for i, m in enumerate(self.middleware_list):
-            if mw_class == m:
-                self.middleware_list = self.middleware_list[:i]
-                break
+        self.response = ObjectDict()
 
     def data_received(self, chunk):
         if chunk:
@@ -115,88 +93,6 @@ class ProxyHandler(RequestHandler):
         return new_headers
 
     @gen.coroutine
-    def execute_next(self, request, mv_type, handler, *args, **kwargs):
-        method_name = self._call_mapper.get(mv_type)
-        if method_name == 'on_request':
-            middleware_list = self.middleware_list
-        elif method_name in ['on_response', 'on_finished']:
-            # 这两个方法的处理顺序是反序
-            middleware_list = self.middleware_list[-1::-1]
-        else:
-            return
-        try:
-            for mv_class in middleware_list:
-                instance = mv_class(handler)
-                # 如果不提供 default, 不存在时会出现异常
-                m = getattr(instance, method_name, None)
-                # logger.debug('%s, %s, %s' % (mv_class, m, method_name))
-                if m and callable(m):
-                    try:
-                        result = m(*args, **kwargs)
-                        if is_future(result):
-                            yield result
-                    except Exception as e:
-                        # 在某一层的中间件出现异常,下一级的都不执行
-                        self.clear_nested_middleware(mv_class)
-                        # 如果在 request 阶段就出现了异常,直接进入 finish
-                        if mv_type == _REQUEST and not self._finished:
-                            status_code = getattr(e, 'status_code', 500)
-                            logger.debug('exception write error')
-                            self.write_error(status_code, exc_info=sys.exc_info())
-                        # 不再往下执行
-                        break
-        except Exception as e:
-            logger.exception(e)
-            # 出现了预料之外的错误, 清理所有中间件, 结束
-            self.middleware_list = []
-            status_code = getattr(e, 'status_code', 500)
-            self.write_error(status_code, exc_info=sys.exc_info())
-
-    @gen.coroutine
-    def _process_request(self, handler):
-        logger.info('_process_request')
-        yield self.execute_next(handler.request, _REQUEST, handler)
-
-    @gen.coroutine
-    def _process_response(self, handler, chunk):
-        logger.info('_process_response')
-        yield self.execute_next(handler.request, _RESPONSE, handler, chunk)
-
-    @gen.coroutine
-    def _process_finished(self, handler):
-        logger.info('_process_finished')
-        yield self.execute_next(handler.request, _FINISHED, handler)
-
-    @gen.coroutine
-    def prepare(self):
-        super(ProxyHandler, self).prepare()
-        logger.debug('base prepare')
-        yield self._process_request(self)
-
-    @gen.coroutine
-    def finish(self, chunk=None):
-        if chunk:
-            self.write(chunk)
-            chunk = None
-
-        yield self._process_response(self, self._write_buffer)
-
-        # 执行完父类的 finish 方法后, 就会开始调用 on_finish
-        super(ProxyHandler, self).finish(chunk)
-
-    def write(self, chunk):
-        super(ProxyHandler, self).write(chunk)
-
-    @gen.coroutine
-    def on_finish(self):
-        """
-        Called after the end of a request.
-        :return:
-        """
-        super(ProxyHandler, self).on_finish()
-        yield self._process_finished(self)
-
-    @gen.coroutine
     def _do_fetch(self, method):
         # 清理和处理一下 header
         headers = self._clean_headers()
@@ -211,6 +107,9 @@ class ProxyHandler(RequestHandler):
             # 设置超时时间
             async_http_connect_timeout = ASYNC_HTTP_CONNECT_TIMEOUT
             async_http_request_timeout = ASYNC_HTTP_REQUEST_TIMEOUT
+
+            # Hook request
+            yield self.process_hook('on_request')
 
             if self.request.host in self.request.uri.split('/'):  # Normal Proxy Request
                 url = self.request.uri
@@ -231,10 +130,10 @@ class ProxyHandler(RequestHandler):
                             request_timeout=async_http_request_timeout,
                             validate_cert=False,
                             follow_redirects=False))
-            self._on_proxy(response)
+            yield self._on_proxy(response)
         except HTTPError as x:
             if hasattr(x, 'response') and x.response:
-                self._on_proxy(x.response)
+                yield self._on_proxy(x.response)
             else:
                 self.set_status(502)
                 self.write('502 Bad Gateway')
@@ -243,26 +142,25 @@ class ProxyHandler(RequestHandler):
             self.set_status(502)
             self.write('502 Bad Gateway')
 
-    # This function is a callback when a small chunk is received
-    def _handle_data_chunk(self, data):
-        if data:
-            if not self.response_body:
-                self.response_body = data
-            else:
-                self.response_body += data
-
+    @gen.coroutine
     def _on_proxy(self, response):
+        self.response_body = response.body if response.body else self.response_body
+        self.response.code = response.code
+        self.response.reason = response.reason
+        self.response.body = self.response_body
+        self.response.headers = response.headers
+        # # Hook response
+        yield self.process_hook('on_response')
+
         try:
             # 如果response.code是非w3c标准的，而是使用了自定义，就必须设置reason，
             # 否则会出现unknown status code的异常
-            self.set_status(response.code, response.reason)
+            self.set_status(self.response.code, self.response.reason)
         except ValueError:
-            self.set_status(response.code, 'Unknown Status Code')
-
-        self.response_body = response.body if response.body else self.response_body
+            self.set_status(self.response.code, 'Unknown Status Code')
 
         # 这里要用 get_all 因为要按顺序
-        for (k, v) in response.headers.get_all():
+        for (k, v) in self.response.headers.get_all():
             if k in ('Transfer-Encoding', 'Content-Length', 'Content-Encoding'):
                 pass
             elif k == 'Set-Cookie':
@@ -270,8 +168,24 @@ class ProxyHandler(RequestHandler):
             else:
                 self.set_header(k, v)
 
-        if response.code != 304 and self.response_body is not None:
-            self.write(self.response_body)
+        if self.response.code != 304 and self.response.body is not None:
+            self.write(self.response.body)
+
+        self.finish()
+        # Hook finished
+        yield self.process_hook('on_finished')
+
+    @gen.coroutine
+    def process_hook(self, method):
+        # Hook
+        m = getattr(self.interceptor, method, None)
+        if m and callable(m):
+            try:
+                result = m()
+                if is_future(result):
+                    yield result
+            except Exception as e:
+                logger.exception(e)
 
     @asynchronous
     def connect(self):
@@ -374,6 +288,7 @@ class ProxyHandler(RequestHandler):
 
 class ProxyServer(object):
     def __init__(self, handler,
+                 interceptor_source_code,
                  listen_ip="0.0.0.0",
                  listen_port=8088,
                  proxy_ip=None, proxy_port=None):
@@ -387,6 +302,7 @@ class ProxyServer(object):
         self.application.proxy_ip = proxy_ip
         self.application.proxy_port = proxy_port
         self.application.intercept_https = True
+        self.application.interceptor_cls = self.load_interceptor(interceptor_source_code)
 
         global server
         server = tornado.httpserver.HTTPServer(self.application, decompress_request=True)
@@ -396,7 +312,8 @@ class ProxyServer(object):
     def start(self):
         logger.info('proxy start')
         # 为了能在线程中启动 tornado 的 event_loop
-        asyncio.set_event_loop(asyncio.new_event_loop())
+        # import asyncio
+        # asyncio.set_event_loop(asyncio.new_event_loop())
         try:
             self.server.listen(self.application.listen_port, self.application.listen_ip)
             self.instance = tornado.ioloop.IOLoop.instance()
@@ -412,9 +329,22 @@ class ProxyServer(object):
 
         logger.warning("Shutting down the proxy server")
 
+    def load_interceptor(self, source):
+        from mountains import text_type
+        import imp
+        import uuid
+        mod_name = 'Interceptor_%s' % text_type(uuid.uuid4()).replace('-', '')
+        mod = sys.modules.setdefault(mod_name, imp.new_module(mod_name))
+        code = compile(source, '<string>', 'exec')
+        # mod.__file__ = mod_name
+        mod.__package__ = ''
+        exec(code, mod.__dict__)
+        return getattr(mod, 'Interceptor', None)
+
 
 if __name__ == "__main__":
-    proxy = ProxyServer(ProxyHandler)
+    interceptor_code = open('./addons/test1.py').read()
+    proxy = ProxyServer(ProxyHandler, interceptor_code)
     try:
         proxy.start()
     except KeyboardInterrupt:
