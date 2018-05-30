@@ -9,6 +9,7 @@ from mountains import logging
 from mountains.logging import StreamHandler, RotatingFileHandler
 
 import settings
+from settings import get_path
 from urls import init_url_rules
 
 if settings.DEBUG:
@@ -18,23 +19,13 @@ else:
 
 logging.init_log(StreamHandler(level=level),
                  RotatingFileHandler(level=level, max_bytes=1024 * 1024 * 3, backup_count=1),
-                 disable_existing_loggers=True)
+                 disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 
-
-def get_path(target_path):
-    path = os.path.join(os.getcwd(), target_path)  # development path
-    if not os.path.exists(path):  # frozen executable path
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), target_path)
-
-    logger.info(path)
-    return path
-
-
-# 静态文件目录，要用这个格式配置，不然会找不到
 app = Bottle()
 
 
+# 静态文件目录，要用这个格式配置，不然会找不到
 @app.route('/static/<path:path>')
 def callback(path):
     return static_file(path, get_path('static'))

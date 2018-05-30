@@ -3,13 +3,16 @@
 from __future__ import unicode_literals, absolute_import
 
 import logging
+import time
+from threading import Thread
 
-from handlers.crypto import handlers
-from utils import APIHandler
-from bottle import get, post, request
+import requests
+from bottle import request
 from future.moves.urllib.parse import urlparse, urljoin
 from mountains.http import read_request_from_str, random_agent
-import requests
+
+from utils import APIHandler
+from .proxy.proxy import ProxyServer, ProxyHandler
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +53,9 @@ def do_request(method, url, headers=None, data=None, session=None,
     return r
 
 
+proxy_server = None
+
+
 def http_request():
     if request.json is None:
         return APIHandler.fail()
@@ -82,3 +88,54 @@ def http_request():
         result = '!!!error!!!'
 
     return APIHandler.success(result)
+
+
+def http_proxy():
+    if request.json is None:
+        return APIHandler.fail()
+
+    listen_ip = request.json.get('listen_ip', '').strip()
+    listen_port = request.json.get('listen_port', '').strip()
+    upstream_ip = request.json.get('upstream_ip', '').strip()
+    upstream_port = request.json.get('upstream_port', '').strip()
+    action = request.json.get('action', '').strip()
+
+    if listen_ip == '' or listen_port == '':
+        return APIHandler.fail(msg='监听地址不能为空')
+
+    if upstream_ip == '':
+        upstream_ip = None
+
+    if upstream_port == '':
+        upstream_port = None
+
+    global proxy_server
+    if action == 'stop':
+        if proxy_server is not None:
+            proxy_server.stop()
+            time.sleep(3)
+            proxy_server = None
+    else:
+        if proxy_server is None:
+            proxy_server = ProxyServer(ProxyHandler, listen_ip, listen_port, upstream_ip, upstream_port)
+            try:
+                Thread(target=proxy_server.start).start()
+            except Exception as e:
+                logger.exception(e)
+                result = '!!!error!!! %s' % e
+
+    return APIHandler.success()
+
+
+def http_interceptor():
+    if request.json is None:
+        return APIHandler.fail()
+
+    name = request.json.get('name', '').strip()
+    code = request.json.get('code', '')
+    entry_id = request.json.get('id', None)
+
+    if name == '' or code == '':
+        return APIHandler.fail(msg='名称或代码不能为空')
+
+    return APIHandler.success()
