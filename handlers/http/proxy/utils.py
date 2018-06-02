@@ -229,3 +229,11 @@ def wrap_socket(socket, domain, success=None, failure=None, io=None, **options):
     # Begin the handshake.
     handshake(wrapped.fileno(), 0)
     return wrapped
+
+
+def headers_2_str(headers):
+    result = []
+    for k, v in headers.items():
+        result.append('%s: %s' % (k, v))
+
+    return '\n'.join(result)

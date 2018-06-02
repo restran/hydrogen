@@ -4,43 +4,20 @@ from __future__ import unicode_literals, absolute_import
 
 import binascii
 from base64 import b64decode, b64encode
-from io import BytesIO
 
-from Cryptodome.Cipher import AES
+from Cryptodome.Cipher import AES, PKCS1_OAEP, PKCS1_v1_5
 from Cryptodome.PublicKey import RSA
-from Cryptodome.Util.number import inverse
-from mountains import force_bytes, force_text, text_type
-from ..converter.handlers.converter import hex2dec
-
 from Cryptodome.Util.Padding import pad, unpad
+from Cryptodome.Util.number import inverse, bytes_to_long, long_to_bytes
+from mountains import force_bytes, force_text, text_type
 
-
-def read_rsa_pem_key(key_content):
-    n, e, p, q = '', '', '', ''
-
-    rsa = RSA.importKey(key_content)
-    n = rsa.n
-    e = rsa.e
-
-    if rsa.has_private():
-        p = rsa.p
-        q = rsa.q
-        is_private = True
-    else:
-        is_private = False
-
-    data = {
-        'key_content': key_content,
-        'n': str(n),
-        'e': str(e),
-        'p': str(p),
-        'q': str(q),
-        'is_private': is_private
-    }
-    return data
+from ..converter.handlers.converter import hex2dec
 
 
 def ensure_long(c):
+    if c is None:
+        return c
+
     if not isinstance(c, int):
         if len(c) == 0:
             return 0
@@ -51,46 +28,135 @@ def ensure_long(c):
     return c
 
 
-def make_private_key_pem(n, e, p, q):
-    n, e, p, q = ensure_long(n), ensure_long(e), ensure_long(p), ensure_long(q)
-    d = inverse(e, (p - 1) * (q - 1))
-    rsa = RSA.construct((n, e, d))
-    return rsa.exportKey()
+class RSAHelper(object):
+    def __init__(self, n=None, e=None, p=None, q=None, padding='NoPadding',
+                 passphrase=None, plain_encoding='Decimal', cipher_encoding='Decimal'):
+        self.n, self.e, self.p, self.q = ensure_long(n), ensure_long(e), \
+                                         ensure_long(p), ensure_long(q)
 
+        if passphrase is not None and passphrase.strip() == '':
+            passphrase = None
 
-def make_public_key_pem(n, e):
-    n, e = ensure_long(n), ensure_long(e)
-    rsa = RSA.construct((n, e,))
-    return rsa.publickey().exportKey()
+        self.passphrase = passphrase
+        self.padding = padding
+        self.plain_encoding = plain_encoding
+        self.cipher_encoding = cipher_encoding
 
+    def read_rsa_pem_key(self, key_content):
+        n, e, p, q = '', '', '', ''
 
-def rsa_encrypt(plain, n, e):
-    """
-    :type plain long
-    :param plain: 明文
-    :param n:
-    :param e:
-    :return:
-    """
-    plain, n, e = ensure_long(plain), ensure_long(n), ensure_long(e)
-    cipher = pow(plain, e, n)
-    return cipher
+        key_content = key_content.strip()
+        if self.passphrase is not None:
+            rsa = RSA.importKey(key_content, self.passphrase)
+        else:
+            rsa = RSA.importKey(key_content)
+        n = rsa.n
+        e = rsa.e
 
+        if rsa.has_private():
+            p = rsa.p
+            q = rsa.q
+            is_private = True
+        else:
+            is_private = False
 
-def rsa_decrypt(cipher, e, p, q):
-    """
-    :param q:
-    :param p:
-    :param e:
-    :type cipher long
-    :param cipher: 密文
-    :return:
-    """
-    cipher, e, p, q = ensure_long(cipher), ensure_long(e), ensure_long(p), ensure_long(q)
-    d = inverse(e, (p - 1) * (q - 1))
-    n = p * q
-    plain = pow(cipher, d, n)
-    return plain
+        data = {
+            'key_content': key_content,
+            'n': str(n),
+            'e': str(e),
+            'p': str(p),
+            'q': str(q),
+            'is_private': is_private
+        }
+        return data
+
+    def make_private_key_pem(self):
+        d = inverse(self.e, (self.p - 1) * (self.q - 1))
+        rsa = RSA.construct((self.n, self.e, d))
+        return rsa.exportKey()
+
+    def make_public_key_pem(self):
+        rsa = RSA.construct((self.n, self.e,))
+        return rsa.publickey().exportKey()
+
+    @classmethod
+    def encoding_2_long(cls, data, encoding):
+        if encoding == 'Hex':
+            data = binascii.a2b_hex(data)
+        elif encoding == 'Base64':
+            data = b64decode(data)
+        elif encoding == 'UTF8':
+            data = force_bytes(data)
+        elif encoding == 'Decimal':
+            return int(data)
+        else:
+            data = force_bytes(data)
+
+        data = bytes_to_long(data)
+        return data
+
+    @classmethod
+    def long_2_encoding(cls, data, encoding):
+        data = long_to_bytes(data)
+        if encoding == 'UTF8':
+            data = force_text(data)
+        elif encoding == 'Hex':
+            data = binascii.b2a_hex(data)
+        elif encoding == 'Base64':
+            data = b64encode(data)
+        elif encoding == 'Decimal':
+            data = bytes_to_long(data)
+        else:
+            data = force_text(data)
+
+        if isinstance(data, bytes):
+            data = text_type(data)[2:-1]
+        return data
+
+    def encrypt(self, plain):
+        """
+        :type plain long
+        :param plain: 明文
+        :return:
+        """
+        plain = self.encoding_2_long(plain, self.plain_encoding)
+        rsa = RSA.construct((self.n, self.e,))
+        # 最佳非对称加密填充（OAEP）
+        if self.padding == 'PKCS1_OAEP':
+            rsa = PKCS1_OAEP.new(rsa)
+            cipher = rsa.encrypt(long_to_bytes(plain))
+        elif self.padding == 'PKCS1_v1_5':
+            rsa = PKCS1_v1_5.new(rsa)
+            cipher = rsa.encrypt(long_to_bytes(plain))
+        else:
+            cipher = pow(plain, self.e, self.n)
+            return self.long_2_encoding(cipher, self.cipher_encoding)
+
+        cipher = self.long_2_encoding(bytes_to_long(cipher), self.cipher_encoding)
+        return cipher
+
+    def decrypt(self, cipher):
+        """
+        :type cipher long
+        :param cipher: 密文
+        :return:
+        """
+        cipher = self.encoding_2_long(cipher, self.cipher_encoding)
+        d = inverse(self.e, (self.p - 1) * (self.q - 1))
+        n = self.p * self.q
+        rsa = RSA.construct((n, self.e, d))
+        if self.padding == 'PKCS1_OAEP':
+            rsa = PKCS1_OAEP.new(rsa)
+            plain = rsa.decrypt(long_to_bytes(cipher))
+        elif self.padding == 'PKCS1_v1_5':
+            rsa = PKCS1_v1_5.new(rsa)
+            plain = rsa.decrypt(long_to_bytes(cipher), True)
+        else:
+            plain = pow(cipher, d, n)
+            return self.long_2_encoding(plain, self.plain_encoding)
+
+        plain = self.long_2_encoding(bytes_to_long(plain), self.plain_encoding)
+        return plain
 
 
 class ZeroPadding(object):

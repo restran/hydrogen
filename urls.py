@@ -25,6 +25,7 @@ url_handlers = [
     (r'/?', Landing),
     (r'/api/converter/convert-data/', converter_api.ConvertData),
     (r'/api/converter/what-encode/', converter_api.WhatEncode),
+    (r'/api/converter/file-converter/', converter_api.FileConverter),
     (r'/api/crypto/decode-data/', crypto_api.DecodeData),
     (r'/api/crypto/rsa-from-pem-key/', crypto_api.RSAFromPEMKey),
     (r'/api/crypto/rsa-to-pem-key/', crypto_api.RSAToPEMKey),
@@ -32,15 +33,5 @@ url_handlers = [
     (r'/api/crypto/aes-encrypt-decrypt/', crypto_api.AESEncryptDecrypt),
     (r'/api/http/request/', http_api.HTTPRequest),
     (r'/api/http/proxy/', http_api.HTTPProxy),
-    (r'/api/http/proxy-interceptor-apply/', http_api.HTTPInterceptor),
     (r'/api/http/proxy-interceptor/', http_api.HTTPInterceptor),
 ]
-
-# def init_url_rules(app: Bottle, url_map_list=url_handlers):
-#     for u in url_map_list:
-#         if len(u) > 2:
-#             methods = u[2]
-#         else:
-#             methods = None
-#
-#         app.route(path=u[0], method=methods, callback=u[1])

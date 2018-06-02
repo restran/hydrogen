@@ -1,8 +1,10 @@
+records
 cryptography
 tornado
 requests
 bottle
 future
+pycurl>=7.43.0.1
 pycryptodomex
 mountains>=0.5.4
 pywebview

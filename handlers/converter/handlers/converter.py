@@ -7,14 +7,15 @@ from __future__ import unicode_literals, absolute_import
 
 import base64
 import binascii
+from base64 import b64decode, b32decode, b16decode
 from xml.sax.saxutils import escape as xml_escape_func
 from xml.sax.saxutils import unescape as xml_unescape_func
-from base64 import b64decode, b32decode, b16decode
-from mountains.encoding import utf8, force_bytes, force_text
+
+from mountains.encoding import force_bytes, force_text, text_type
 
 
 def base_padding(data, length=4):
-    data = utf8(data)
+    data = force_bytes(data)
     if len(data) % length != 0:
         data = data + b'=' * (length - len(data) % length)
 
@@ -29,7 +30,7 @@ def partial_decode(decode_method, data, base_padding_length=4):
     :param data:
     :return:
     """
-    data = utf8(data)
+    data = force_bytes(data)
     result = []
     while len(data) > 0:
         tmp = base_padding(data[:base_padding_length], base_padding_length)
@@ -189,8 +190,11 @@ def dec2hex(s):
         num, rem = divmod(num, 16)
         mid.append(base[rem])
 
-    return ''.join([str(x) for x in mid[::-1]])
+    r = ''.join([str(x) for x in mid[::-1]])
+    if len(r) % 2 != 0:
+        r = '0' + r
 
+    return r
 
 # hex2tobin
 # 十六进制 to 二进制: bin(int(str,16))

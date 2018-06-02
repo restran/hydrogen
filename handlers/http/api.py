@@ -4,10 +4,14 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 import time
+import uuid
+from datetime import datetime
 from threading import Thread
 
 import requests
 from future.moves.urllib.parse import urlparse, urljoin
+from mountains import text_type
+from mountains.datetime.converter import datetime2str
 from mountains.http import read_request_from_str, random_agent
 
 from handlers.http.proxy.proxy import ProxyServer, ProxyHandler
@@ -95,20 +99,36 @@ class HTTPProxy(APIHandler):
         if self.request.json is None:
             return self.fail()
 
-        listen_ip = self.request.json.get('listen_ip', '').strip()
-        listen_port = self.request.json.get('listen_port', '').strip()
-        upstream_ip = self.request.json.get('upstream_ip', '').strip()
-        upstream_port = self.request.json.get('upstream_port', '').strip()
+        listen = self.request.json.get('listen', '').strip()
+        upstream = self.request.json.get('upstream', '').strip()
+
         action = self.request.json.get('action', '').strip()
+        interceptor = self.request.json.get('interceptor', '')
+
+        try:
+            listen_ip, listen_port = listen.split(':')
+            if upstream != '':
+                upstream_ip, upstream_port = upstream.split(':')
+                upstream_port = int(upstream_port)
+            else:
+                upstream_ip, upstream_port = None, None
+        except Exception as e:
+            return self.fail(msg='%s' % e)
 
         if listen_ip == '' or listen_port == '':
             return self.fail(msg='监听地址不能为空')
 
-        if upstream_ip == '':
-            upstream_ip = None
-
-        if upstream_port == '':
-            upstream_port = None
+        if interceptor not in (None, ''):
+            sql = 'select * from interceptor where uuid=:uuid limit 1'
+            params = {
+                'uuid': interceptor
+            }
+            rows = self.database.query(sql, **params).as_dict()
+            if len(rows) <= 0:
+                return self.fail(msg='查找不到该 Interceptor')
+            interceptor_code = rows[0]['code']
+        else:
+            interceptor_code = ''
 
         global proxy_server
         if action == 'stop':
@@ -118,7 +138,8 @@ class HTTPProxy(APIHandler):
                 proxy_server = None
         else:
             if proxy_server is None:
-                proxy_server = ProxyServer(ProxyHandler, None, listen_ip, listen_port, upstream_ip, upstream_port)
+                proxy_server = ProxyServer(ProxyHandler, interceptor_code,
+                                           listen_ip, listen_port, upstream_ip, upstream_port)
                 try:
                     Thread(target=proxy_server.start).start()
                 except Exception as e:
@@ -136,9 +157,46 @@ class HTTPInterceptor(APIHandler):
 
         name = self.request.json.get('name', '').strip()
         code = self.request.json.get('code', '')
-        entry_id = self.request.json.get('id', None)
+        entry_uuid = self.request.json.get('uuid', None)
+        action = self.request.json.get('action', '')
 
-        if name == '' or code == '':
-            return self.fail(msg='名称或代码不能为空')
+        if action == 'insert-update':
+            if name == '' or code == '':
+                return self.fail(msg='名称或代码不能为空')
 
-        return self.success()
+            try:
+                if entry_uuid is not None:
+                    sql = 'update interceptor set name = :name, code = :code where uuid = :uuid'
+                else:
+                    entry_uuid = text_type(uuid.uuid4()).replace('-', '')
+                    sql = 'insert into interceptor (name, code, uuid, create_date) ' \
+                          'values (:name, :code, :uuid, :create_date)'
+                params = {
+                    'uuid': entry_uuid,
+                    'name': name,
+                    'code': code,
+                    'create_date': datetime2str(datetime.now())
+                }
+                self.database.query(sql, **params)
+                return self.success(params)
+            except Exception as e:
+                return self.fail(msg='%s' % e)
+        elif action == 'delete':
+            if entry_uuid in ('', None):
+                return self.fail(msg='uuid不能为空')
+
+            try:
+                sql = 'delete from interceptor where uuid = :uuid'
+                params = {
+                    'uuid': entry_uuid,
+                }
+                self.database.query(sql, **params)
+                return self.success(params)
+            except Exception as e:
+                return self.fail(msg='%s' % e)
+        elif action == 'get-all':
+            sql = 'select * from interceptor order by create_date'
+            data = self.database.query(sql).as_dict()
+            return self.success(data)
+        else:
+            return self.success()

@@ -27,7 +27,6 @@ class APIHandler(RequestHandler):
     def __init__(self, app, request, **kwargs):
         super(APIHandler, self).__init__(app, request, **kwargs)
         self.database = app.database
-        self.post_data = {}
 
     def return_json(self, code, data, msg):
         try:

@@ -3,8 +3,9 @@
 from __future__ import unicode_literals, absolute_import
 
 import logging
+from base64 import b64encode
 
-from mountains import text_type
+from mountains import text_type, force_bytes
 
 from handlers.converter.handlers import converter, what_encode as what_encode_handler
 from handlers.converter.handlers.what_code_scheme import detect_code_scheme
@@ -107,3 +108,24 @@ class WhatEncode(APIHandler):
             result['result'] = '!!!error!!! %s' % e
 
         return self.success(result)
+
+
+class FileConverter(APIHandler):
+    def post(self):
+        file_content = self.request.files.get('file')[0].body
+        encoding = text_type(self.get_body_argument('encoding', 'Hex'))
+
+        if encoding == 'Hex':
+            content = force_bytes(file_content).hex()
+        elif encoding == 'Base64':
+            content = b64encode(force_bytes(file_content))
+        elif encoding == 'Decimal':
+            content = force_bytes(file_content).hex()
+            content = text_type(int(content, 16))
+        else:
+            content = file_content
+
+        data = {
+            'content': content
+        }
+        return self.success(data)

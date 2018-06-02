@@ -5,7 +5,9 @@ from __future__ import unicode_literals, absolute_import
 import socket
 import ssl
 import sys
+from datetime import datetime
 
+import records
 import tornado.curl_httpclient
 import tornado.escape
 import tornado.httpclient
@@ -27,8 +29,18 @@ from handlers.http.proxy.utils import wrap_socket
 
 logger = logging.getLogger(__name__)
 
+ASYNC_HTTP_MAX_CLIENTS = 100
 ASYNC_HTTP_CONNECT_TIMEOUT = 60
 ASYNC_HTTP_REQUEST_TIMEOUT = 120
+
+try:
+    # curl_httpclient is faster than simple_httpclient
+    AsyncHTTPClient.configure(
+        'tornado.curl_httpclient.CurlAsyncHTTPClient',
+        max_clients=ASYNC_HTTP_MAX_CLIENTS)
+except ImportError:
+    AsyncHTTPClient.configure(
+        'tornado.simple_httpclient.SimpleAsyncHTTPClient')
 
 
 class ProxyHandler(RequestHandler):
@@ -42,7 +54,29 @@ class ProxyHandler(RequestHandler):
         else:
             self.interceptor = None
 
-        self.response = ObjectDict()
+        self.database = self.application.database
+        self.http_history = ObjectDict()
+        self.http_history.request = ObjectDict()
+        self.http_history.response = ObjectDict()
+        self.response = self.http_history.response
+
+    def http_request_history(self):
+        pass
+        # history_uuid = text_type(uuid.uuid4()).replace('-', '')
+        # sql = 'insert into http_history (uuid, url, request_header, request_body, request_date, extra_data) ' \
+        #       'values (:uuid, :url, :request_header, :request_body, :request_date, :status_code, :extra_data)'
+        # params = {
+        #     'uuid': history_uuid,
+        #     'url': self.http_history.request.url,
+        #     'request_headers': headers_2_str(self.http_history.request.headers)
+        # }
+        # self.database.query(sql)
+
+    def http_response_history(self):
+        pass
+        # sql = 'insert into http_history (url, request, response, request_date, elapsed, status_code, extra_data) ' \
+        #       'values (:url, :request, :response, :request_date, :elapsed, :status_code, :extra_data)'
+        # self.database.query(sql)
 
     def data_received(self, chunk):
         if chunk:
@@ -116,6 +150,14 @@ class ProxyHandler(RequestHandler):
             else:  # Transparent Proxy Request
                 # 当使用 https 的 intercept_https 时，会走这里
                 url = self.request.protocol + "://" + self.request.host + self.request.uri
+
+            # 插入访问日志
+            self.http_history.request.url = url
+            self.http_history.request.method = method
+            self.http_history.request.date = datetime.now()
+            self.http_history.request.headers = self.request.headers
+            self.http_history.request.body = body if body is not None else ''
+            self.http_request_history()
 
             response = yield AsyncHTTPClient().fetch(
                 HTTPRequest(url=url,
@@ -288,7 +330,6 @@ class ProxyHandler(RequestHandler):
 
 class ProxyServer(object):
     def __init__(self, handler,
-                 database,
                  interceptor_source_code,
                  listen_ip="0.0.0.0",
                  listen_port=8088,
@@ -304,7 +345,9 @@ class ProxyServer(object):
         self.application.proxy_port = proxy_port
         self.application.intercept_https = True
         self.application.interceptor_cls = self.load_interceptor(interceptor_source_code)
-        self.application.database = database
+        from settings import DATA_BASE_PATH
+        logger.info('database path %s' % DATA_BASE_PATH)
+        self.application.database = records.Database('sqlite:///%s' % DATA_BASE_PATH)
 
         global server
         server = tornado.httpserver.HTTPServer(self.application, decompress_request=True)
@@ -339,7 +382,7 @@ class ProxyServer(object):
         import imp
         import uuid
         try:
-            mod_name = 'Interceptor_%s' % text_type(uuid.uuid4()).replace('-', '')
+            mod_name = 'Interceptor_%s' % text_type(uuid.uuid4()).replace('-', '')[10:-10]
             mod = sys.modules.setdefault(mod_name, imp.new_module(mod_name))
             code = compile(source, '<string>', 'exec')
             # mod.__file__ = mod_name

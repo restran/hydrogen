@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2017/10/12
 from __future__ import unicode_literals, absolute_import
+
 import os
-import sqlite3
 
 APP_NAME = 'Hydrogen'
 VERSION = '0.5.0'
@@ -13,7 +13,8 @@ PORT = 8000
 
 PRODUCT_PORT = 23498
 
-DATA_BASE = sqlite3.connect('database.db')
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+DATA_BASE_PATH = os.path.join(os.getcwd(), 'database.db')
 
 
 def get_path(target_path):

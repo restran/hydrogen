@@ -8,8 +8,7 @@ from mountains import text_type
 
 from handlers.crypto import handlers
 from utils import APIHandler
-from .utils import make_private_key_pem, make_public_key_pem, \
-    read_rsa_pem_key, rsa_decrypt, rsa_encrypt, AESHelper
+from .utils import RSAHelper, AESHelper
 
 logger = logging.getLogger(__name__)
 
@@ -107,12 +106,14 @@ class RSAFromPEMKey(APIHandler):
             return self.fail()
 
         key_content = self.request.json.get('key_content', '')
+        passphrase = self.request.json.get('passphrase', None)
         if key_content == '':
             return self.fail(msg='RSA密钥不能为空')
 
         try:
-            data = read_rsa_pem_key(key_content)
+            data = RSAHelper(passphrase=passphrase).read_rsa_pem_key(key_content)
         except Exception as e:
+            logger.exception(e)
             msg = '%s, %s' % ('识别失败', e)
             return self.fail(msg=msg)
 
@@ -143,16 +144,18 @@ class RSAToPEMKey(APIHandler):
             return self.fail(msg='p和q不能为空')
 
         try:
+            rsa = RSAHelper(n, e, p, q)
             if p != '' and q != '':
-                key_content = make_private_key_pem(n, e, p, q)
+                key_content = rsa.make_private_key_pem()
                 is_private = True
             else:
-                key_content = make_public_key_pem(n, e)
+                key_content = rsa.make_public_key_pem()
                 is_private = False
         except Exception as e:
+            logger.exception(e)
             msg = '%s, %s' % ('转成PEM格式密钥失败', e)
-
             return self.fail(msg=msg)
+
         data = {
             'key_content': key_content,
             'n': n,
@@ -182,6 +185,9 @@ class RSAEncryptDecrypt(APIHandler):
         plain = self.request.json.get('plain', '')
         cipher = self.request.json.get('cipher', '')
         action = self.request.json.get('action', '')
+        padding = self.request.json.get('padding', 'NoPadding')
+        plain_encoding = self.request.json.get('plain_encoding', 'Decimal')
+        cipher_encoding = self.request.json.get('cipher_encoding', 'Decimal')
 
         if n == '':
             return self.fail(msg='n不能为空')
@@ -192,18 +198,22 @@ class RSAEncryptDecrypt(APIHandler):
             return self.fail(msg='p和q不能为空')
 
         try:
+            rsa = RSAHelper(n, e, p, q, padding=padding,
+                            plain_encoding=plain_encoding,
+                            cipher_encoding=cipher_encoding)
             if action == 'decrypt':
                 if p != '' and q != '':
-                    plain = rsa_decrypt(cipher, e, p, q)
+                    plain = rsa.decrypt(cipher)
                 else:
                     return self.fail(msg='p和q不能为空')
             else:
                 if n != '' and e != '':
-                    cipher = rsa_encrypt(plain, n, e)
+                    cipher = rsa.encrypt(plain)
                 else:
                     return self.fail(msg='n和e不能为空')
 
         except Exception as e:
+            logger.exception(e)
             msg = '%s, %s' % ('RSA加解密失败', e)
 
             return self.fail(msg=msg)
