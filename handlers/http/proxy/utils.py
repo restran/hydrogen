@@ -142,8 +142,8 @@ def gen_signed_cert(domain):
                 ).not_valid_before(
                     datetime.utcnow()
                 ).not_valid_after(
-                    # Our certificate will be valid for 365 * 5 days
-                    datetime.utcnow() + timedelta(days=365 * 5)
+                    # Our certificate will be valid for 365 * 2 days
+                    datetime.utcnow() + timedelta(days=365 * 2)
                 ).add_extension(
                     x509.SubjectAlternativeName([x509.DNSName(domain)]),
                     critical=False,

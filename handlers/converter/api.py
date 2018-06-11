@@ -14,7 +14,7 @@ from utils import APIHandler
 logger = logging.getLogger(__name__)
 
 
-def do_convert(method, data, params):
+def do_convert(method, data, params, multiple_input):
     # data = force_text(converter.from_base64(data))
     if method == 'all_digit_convert':
         split_list = [t for t in data.split(' ') if t != '']
@@ -30,26 +30,35 @@ def do_convert(method, data, params):
         return result
     elif hasattr(converter, method):
         func = getattr(converter, method)
-        index = 0
-        last_index = 0
-        data += ' '
-        length = len(data)
         result = []
-        # 输入的时候是以什么字符分隔，输出的时候保持一致
-        while index < length:
-            t = data[index]
-            if t in (' ', '\n'):
-                text = data[last_index:index]
-                last_index = index + 1
-                if text != '':
-                    if params is not None:
-                        r = text_type(func(text, *params))
-                    else:
-                        r = text_type(func(text))
-                    result.append(r)
+        if not multiple_input:
+            if data != '':
+                if params is not None:
+                    r = text_type(func(data, *params))
+                else:
+                    r = text_type(func(data))
+                result.append(r)
+        else:
+            data += '\n'
+            index = 0
+            last_index = 0
 
-                result.append(t)
-            index += 1
+            length = len(data)
+            # 输入的时候是以什么字符分隔，输出的时候保持一致
+            while index < length:
+                t = data[index]
+                if t in ('\n',):
+                    text = data[last_index:index]
+                    last_index = index + 1
+                    if text != '':
+                        if params is not None:
+                            r = text_type(func(text, *params))
+                        else:
+                            r = text_type(func(text))
+                        result.append(r)
+
+                    result.append(t)
+                index += 1
 
         result = ''.join(result)
         result = result.rstrip(' ')
@@ -67,11 +76,12 @@ class ConvertData(APIHandler):
         method = self.request.json.get('method')
         data = self.request.json.get('data')
         params = self.request.json.get('params')
+        multiple_input = self.request.json.get('multiple_input', False)
         if method is None or data is None:
             return self.fail()
 
         try:
-            result = do_convert(method, data, params)
+            result = do_convert(method, data, params, multiple_input)
         except Exception as e:
             logger.exception(e)
             result = '!!!error!!! %s' % e

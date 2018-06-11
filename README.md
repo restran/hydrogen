@@ -47,6 +47,7 @@ Mac
 - AES/RSA 解码工具
 - HTTP Proxy 工具（支持HTTPS，可以用 Python 编写一个拦截器），可搭配 BurpSuite 查看访问历史
 - HTTP Repeat（自动解析请求包，实现重放请求，类似 BurpSuite Repeater）
+- Hash 工具
 
 ### 生成CA证书
 

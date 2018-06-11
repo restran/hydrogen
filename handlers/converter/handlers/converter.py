@@ -146,6 +146,8 @@ def hex2str(s):
     :param s: 十六进制字符串
     :return: 字符串
     """
+    if s.startswith('0x') or s.startswith('0X'):
+        s = s[2:]
     return force_text(binascii.a2b_hex(s))
 
 

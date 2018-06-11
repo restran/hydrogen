@@ -11,7 +11,7 @@ from base64 import urlsafe_b64decode
 from copy import deepcopy
 from functools import cmp_to_key
 from optparse import OptionParser
-
+import base64
 from future.moves.urllib.parse import unquote_plus
 from mountains import PY3, PY2
 from mountains.encoding import utf8, to_unicode
@@ -150,7 +150,7 @@ class WhatEncode(object):
                 rex = re.compile('^[A-Z2-7=]+$', re.MULTILINE)
                 # 自动纠正填充
                 if self.regex_match(rex, encode_str):
-                    decode_str = partial_base32_decode(encode_str)
+                    decode_str = base64.b32decode(base_padding(encode_str, 8))
                 else:
                     return False, raw_encode_str
             elif decode_method == 'base64':
@@ -165,7 +165,7 @@ class WhatEncode(object):
                 rex = re.compile('^[A-Za-z0-9+/=]+$', re.MULTILINE)
                 # 自动纠正填充
                 if self.regex_match(rex, encode_str):
-                    decode_str = partial_base64_decode(encode_str)
+                    decode_str = base64.b64decode(base_padding(encode_str, 4))
                 else:
                     return False, raw_encode_str
             elif decode_method == 'urlsafe_b64':
