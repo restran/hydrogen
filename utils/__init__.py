@@ -7,6 +7,7 @@ import socket
 import string
 from importlib import import_module
 
+from mountains import force_text, text_type
 from mountains import json
 from tornado.web import RequestHandler
 
@@ -129,3 +130,12 @@ def get_raw_plain_text(raw_data, decoded_data):
         plain.append(new_c)
 
     return ''.join(plain)
+
+
+def smart_text(s):
+    if isinstance(s, bytes):
+        s = text_type(s)[2:-1]
+    else:
+        s = text_type(s)
+
+    return s

@@ -12,7 +12,7 @@ import requests
 from future.moves.urllib.parse import urlparse, urljoin
 from mountains import text_type
 from mountains.datetime.converter import datetime2str
-from mountains.http import read_request_from_str, random_agent
+from mountains.http import read_request_from_str, DEFAULT_USER_AGENT
 
 from handlers.http.proxy.proxy import ProxyServer, ProxyHandler
 from utils import APIHandler
@@ -38,7 +38,7 @@ def do_request(method, url, headers=None, data=None, session=None,
     if headers is None or not isinstance(headers, dict):
         headers = {}
     elif 'User-Agent' not in headers:
-        headers['User-Agent'] = random_agent()
+        headers['User-Agent'] = DEFAULT_USER_AGENT
 
     base_headers.update(headers)
 

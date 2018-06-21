@@ -7,11 +7,12 @@ from __future__ import unicode_literals, absolute_import
 
 import base64
 import binascii
+import string
 from base64 import b64decode, b32decode, b16decode
 from xml.sax.saxutils import escape as xml_escape_func
 from xml.sax.saxutils import unescape as xml_unescape_func
 
-from mountains.encoding import force_bytes, force_text, text_type
+from mountains.encoding import force_bytes, force_text
 
 
 def base_padding(data, length=4):
@@ -61,7 +62,7 @@ def to_base64(data):
     :param data: 字符串
     :return: BASE64字符串
     """
-    return base64.b64encode(data)
+    return base64.b64encode(force_bytes(data))
 
 
 def from_base64(data):
@@ -140,18 +141,41 @@ def str2hex(s):
     return force_text(binascii.b2a_hex(force_bytes(s)))
 
 
+def swap_case(s):
+    new_data = []
+    for t in s:
+        if t in string.ascii_lowercase:
+            t = t.upper()
+        elif t in string.ascii_uppercase:
+            t = t.lower()
+
+        new_data.append(t)
+    return ''.join(new_data)
+
+
 def hex2str(s):
     """
     把十六进制字符串转换成其ASCII表示字符串
     :param s: 十六进制字符串
     :return: 字符串
     """
-    if s.startswith('0x') or s.startswith('0X'):
+    if s[:2].lower() == '0x':
         s = s[2:]
-    return force_text(binascii.a2b_hex(s))
+    return binascii.a2b_hex(s)
 
 
 base = [str(x) for x in range(10)] + [chr(x) for x in range(ord('A'), ord('A') + 6)]
+
+
+def b642hex(s):
+    s = base_padding(s, 4)
+    s = b64decode(force_bytes(s))
+    return str2hex(s)
+
+
+def hex2b64(s):
+    s = hex2str(s)
+    return to_base64(s)
 
 
 # bin2dec
@@ -197,6 +221,7 @@ def dec2hex(s):
         r = '0' + r
 
     return r
+
 
 # hex2tobin
 # 十六进制 to 二进制: bin(int(str,16))

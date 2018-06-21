@@ -5,13 +5,24 @@ from __future__ import unicode_literals, absolute_import
 import logging
 from base64 import b64encode
 
-from mountains import text_type, force_bytes
+from mountains import text_type, force_bytes, force_text
 
 from handlers.converter.handlers import converter, what_encode as what_encode_handler
 from handlers.converter.handlers.what_code_scheme import detect_code_scheme
 from utils import APIHandler
 
 logger = logging.getLogger(__name__)
+
+
+def smart_text(s):
+    try:
+        if isinstance(s, str) or isinstance(s, bytes):
+            s = force_text(s)
+        else:
+            s = text_type(s)
+    except:
+        s = text_type(s)
+    return s
 
 
 def do_convert(method, data, params, multiple_input):
@@ -34,34 +45,25 @@ def do_convert(method, data, params, multiple_input):
         if not multiple_input:
             if data != '':
                 if params is not None:
-                    r = text_type(func(data, *params))
+                    r = func(data, *params)
                 else:
-                    r = text_type(func(data))
-                result.append(r)
+                    r = func(data)
+
+                result.append(smart_text(r))
+
+            result = ''.join(result)
         else:
-            data += '\n'
-            index = 0
-            last_index = 0
+            data_list = data.splitlines()
+            data_list = [t for t in data_list if t != '']
+            for text in data_list:
+                if params is not None:
+                    r = func(text, *params)
+                else:
+                    r = func(text)
 
-            length = len(data)
-            # 输入的时候是以什么字符分隔，输出的时候保持一致
-            while index < length:
-                t = data[index]
-                if t in ('\n',):
-                    text = data[last_index:index]
-                    last_index = index + 1
-                    if text != '':
-                        if params is not None:
-                            r = text_type(func(text, *params))
-                        else:
-                            r = text_type(func(text))
-                        result.append(r)
+                result.append(smart_text(r))
 
-                    result.append(t)
-                index += 1
-
-        result = ''.join(result)
-        result = result.rstrip(' ')
+            result = '\n'.join(result)
     else:
         result = '!!!error!!! method %s not found' % method
 

@@ -2,6 +2,7 @@
 # Created by restran on 2017/11/4
 from __future__ import unicode_literals, absolute_import
 
+import base64
 import hashlib
 import logging
 import re
@@ -11,13 +12,12 @@ from base64 import urlsafe_b64decode
 from copy import deepcopy
 from functools import cmp_to_key
 from optparse import OptionParser
-import base64
+
 from future.moves.urllib.parse import unquote_plus
 from mountains import PY3, PY2
-from mountains.encoding import utf8, to_unicode
+from mountains.encoding import force_text, force_bytes
 
-from handlers.converter.handlers.converter import partial_base64_decode, \
-    partial_base32_decode, partial_base16_decode, base_padding, hex2str
+from handlers.converter.handlers.converter import partial_base16_decode, base_padding, hex2str
 from handlers.crypto.handlers.rot13 import decode_rot13
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ encode_methods = [
     'zlib',
     'rot13',
     'pawn_shop',  # 当铺密码
-    'switch_case',  # 大小写交换
+    'swap_case',  # 大小写交换
     'reverse_alphabet',  # 字母表逆序
     'reverse',  # 逆序
     'urlencode',
@@ -104,7 +104,7 @@ class WhatEncode(object):
     @classmethod
     def regex_match(cls, regex, encode_str):
         try:
-            return regex.match(to_unicode(encode_str))
+            return regex.match(force_text(encode_str))
         except:
             print(encode_str)
             return False
@@ -114,11 +114,11 @@ class WhatEncode(object):
             return False, encode_str
 
         # encode_str = deepcopy(encode_str)
-        encode_str = utf8(encode_str)
+        encode_str = force_bytes(encode_str)
         if decode_method in ['zlib']:
-            encode_str = utf8(encode_str)
+            encode_str = force_bytes(encode_str)
         else:
-            encode_str = to_unicode(encode_str)
+            encode_str = force_text(encode_str)
 
         raw_encode_str = deepcopy(encode_str)
         if len(encode_str) <= 0:
@@ -189,7 +189,7 @@ class WhatEncode(object):
 
                 rex = re.compile('^[A-Za-z0-9!#$%&()*+\-;<=>?@^_`{|}~]+$', re.MULTILINE)
                 if self.regex_match(rex, encode_str):
-                    decode_str = a85decode(utf8(encode_str))
+                    decode_str = a85decode(force_bytes(encode_str))
                 else:
                     return False, encode_str
             elif decode_method == 'base85':
@@ -201,7 +201,7 @@ class WhatEncode(object):
 
                 rex = re.compile('^[A-Za-z0-9!#$%&()*+\-;<=>?@^_`{|}~]+$', re.MULTILINE)
                 if self.regex_match(rex, encode_str):
-                    decode_str = b85decode(utf8(encode_str))
+                    decode_str = b85decode(force_bytes(encode_str))
                 else:
                     return False, encode_str
             elif decode_method == 'rot13':
@@ -215,7 +215,7 @@ class WhatEncode(object):
                 except:
                     pass
 
-                encode_str = to_unicode(encode_str)
+                encode_str = force_text(encode_str)
                 encode_str = encode_str.replace(' ', '').strip()
                 code_base = '口由中人工大王夫井羊'
                 decode_str = []
@@ -315,9 +315,9 @@ class WhatEncode(object):
                         tmp_list = tmp_list[3:]
                     ascii_list.append(chr(int(tmp_str)))
                 decode_str = ''.join(ascii_list)
-            elif decode_method in ['switch_case', 'reverse_alphabet', 'reverse']:
+            elif decode_method in ['swap_case', 'reverse_alphabet', 'reverse']:
                 # 如果这里不做限制，会无限递归下去
-                if len(m_list) > 0 and m_list[-1] in ['switch_case', 'reverse_alphabet', 'reverse']:
+                if len(m_list) > 0 and m_list[-1] in ['swap_case', 'reverse_alphabet', 'reverse']:
                     return False, raw_encode_str
 
                 # 一定要包含 ascii 字符
@@ -329,7 +329,7 @@ class WhatEncode(object):
                 # if not self.regex_match(rex, encode_str):
                 #     return False, raw_encode_str
 
-                if decode_method == 'switch_case':
+                if decode_method == 'swap_case':
                     new_data = []
                     for t in encode_str:
                         if t in string.ascii_lowercase:
@@ -372,7 +372,7 @@ class WhatEncode(object):
                     if len(encode_str) % 2 != 0:
                         encode_str += '0'
 
-                    decode_str = hex2str(encode_str)
+                    decode_str = force_text(hex2str(encode_str))
                 else:
                     return False, raw_encode_str
             elif decode_method == 'zlib':
@@ -380,7 +380,7 @@ class WhatEncode(object):
                     return False, raw_encode_str
 
                 try:
-                    decode_str = zlib.decompress(utf8(encode_str))
+                    decode_str = zlib.decompress(force_bytes(encode_str))
                 except:
                     return False, raw_encode_str
             else:
@@ -388,13 +388,13 @@ class WhatEncode(object):
 
             if len(decode_str) <= 0:
                 return False, raw_encode_str
-            elif utf8(encode_str) == utf8(decode_str):
+            elif force_bytes(encode_str) == force_bytes(decode_str):
                 return False, raw_encode_str
             else:
 
                 # 解码的内容只有可打印字符，才认为合法
                 if self.only_printable:
-                    decode_str = to_unicode(decode_str)
+                    decode_str = force_text(decode_str)
                     if isinstance(decode_str, bytes):
                         return False, raw_encode_str
                     tmp_decode_str = list(decode_str)
@@ -444,7 +444,7 @@ class WhatEncode(object):
                     else:
                         if len(tmp_m_list) > 0 and not has_print:
                             has_print = True
-                            md5 = hashlib.md5(utf8(decode_str)).hexdigest()
+                            md5 = hashlib.md5(force_bytes(decode_str)).hexdigest()
                             if md5 in result_method_dict:
                                 item = result_method_dict[md5]
                                 # 为了避免数据很繁杂，只保留最短路径
@@ -461,8 +461,9 @@ class WhatEncode(object):
             should_try_list = new_should_try_list
 
         def cmp_method_list(x, y):
-            len_x = len(x['m_list'])
-            len_y = len(y['m_list'])
+            # 按照解码后的数据长度排序，最小的排在前面
+            len_x = len(x['data'])
+            len_y = len(y['data'])
             if len_x == len_y:
                 for index, t in enumerate(x['m_list']):
                     if x['m_list'][index] > y['m_list'][index]:
@@ -473,9 +474,26 @@ class WhatEncode(object):
                         return -1
                 return 0
             elif len_x > len_y:
-                return 1
-            else:
                 return -1
+            else:
+                return 1
+
+            # 按使用方法列表的长度排序，最大的排在前面
+            # len_x = len(x['m_list'])
+            # len_y = len(y['m_list'])
+            # if len_x == len_y:
+            #     for index, t in enumerate(x['m_list']):
+            #         if x['m_list'][index] > y['m_list'][index]:
+            #             return 1
+            #         elif x['m_list'][index] == y['m_list'][index]:
+            #             pass
+            #         else:
+            #             return -1
+            #     return 0
+            # elif len_x > len_y:
+            #     return 1
+            # else:
+            #     return -1
 
         result_method_list = sorted(result_method_dict.values(),
                                     key=cmp_to_key(lambda x, y: cmp_method_list(x, y)),

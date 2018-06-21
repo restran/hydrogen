@@ -1,2 +1,2 @@
-pyinstaller --onefile --windowed --exclude-module=django --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --icon=assets/icon.ico main.py
+pyinstaller --onefile --windowed --hidden-import=mountains --exclude-module=django --exclude-module=numpy --exclude-module=PIL --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --icon=assets/icon.ico main.py
 pause

@@ -47,7 +47,7 @@ def main():
         logger.info('sleep...')
 
     logger.info("Server started in 127.0.0.1:%s" % settings.PORT)
-    webview.create_window(settings.APP_NAME, "http://127.0.0.1:%s" % settings.PORT, min_size=(640, 480))
+    webview.create_window(settings.APP_NAME, "http://127.0.0.1:%s" % settings.PORT, min_size=(660, 500))
 
 
 if __name__ == '__main__':

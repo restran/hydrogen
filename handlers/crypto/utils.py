@@ -82,6 +82,8 @@ class RSAHelper(object):
     @classmethod
     def encoding_2_long(cls, data, encoding):
         if encoding == 'Hex':
+            if data[:2].lower() == '0x':
+                data = data[2:]
             data = binascii.a2b_hex(data)
         elif encoding == 'Base64':
             data = b64decode(data)
@@ -256,6 +258,8 @@ class AESHelper(object):
 
     def encoding_2_bytes(self, data, encoding):
         if encoding == 'Hex':
+            if data[:2].lower() == '0x':
+                data = data[2:]
             data = binascii.a2b_hex(data)
         elif encoding == 'Base64':
             data = b64decode(data)
