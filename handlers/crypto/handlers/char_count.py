@@ -15,7 +15,10 @@ def decode(data, verbose=False):
     p = PrintCollector()
     r = Counter(data)
     length = len(data)
-    for k, v in r.items():
+    data = [{'k': k, 'v': v} for k, v in r.items()]
+    sorted(data, key=lambda a: a['v'])
+    for t in data:
+        k, v = t['k'], t['v']
         p.print('{}: {:.1f}%, {}'.format(k, v / length * 100, v))
 
     return p.smart_output(verbose=verbose)
