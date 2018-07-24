@@ -267,7 +267,7 @@ def dec2str(n):
     s = hex(int(n))[2:].rstrip('L')
     if len(s) % 2 != 0:
         s = '0' + s
-    return hex2str(s)
+    return force_text(hex2str(s))
 
 
 def str2bin(s):
@@ -363,4 +363,5 @@ if __name__ == "__main__":
     # print(x)
     x = 'JVDFER2HHU6T2==='
     x = partial_base32_decode(x)
+    x = hex2str('20B4')
     print(x)

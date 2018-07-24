@@ -182,6 +182,7 @@ class RSAEncryptDecrypt(APIHandler):
         e = self.request.json.get('e', '')
         p = self.request.json.get('p', '')
         q = self.request.json.get('q', '')
+        d = self.request.json.get('d', '')
         plain = self.request.json.get('plain', '')
         cipher = self.request.json.get('cipher', '')
         action = self.request.json.get('action', '')
@@ -198,14 +199,14 @@ class RSAEncryptDecrypt(APIHandler):
             return self.fail(msg='p和q不能为空')
 
         try:
-            rsa = RSAHelper(n, e, p, q, padding=padding,
+            rsa = RSAHelper(n, e, p, q, d, padding=padding,
                             plain_encoding=plain_encoding,
                             cipher_encoding=cipher_encoding)
             if action == 'decrypt':
-                if p != '' and q != '':
+                if (p != '' and q != '') or d != '':
                     plain = rsa.decrypt(cipher)
                 else:
-                    return self.fail(msg='p和q不能为空')
+                    return self.fail(msg='p和q或者d不能为空')
             else:
                 if n != '' and e != '':
                     cipher = rsa.encrypt(plain)

@@ -29,10 +29,10 @@ def ensure_long(c):
 
 
 class RSAHelper(object):
-    def __init__(self, n=None, e=None, p=None, q=None, padding='NoPadding',
+    def __init__(self, n=None, e=None, p=None, q=None, d=None, padding='NoPadding',
                  passphrase=None, plain_encoding='Decimal', cipher_encoding='Decimal'):
-        self.n, self.e, self.p, self.q = ensure_long(n), ensure_long(e), \
-                                         ensure_long(p), ensure_long(q)
+        self.n, self.e, self.p, self.q, self.d = ensure_long(n), ensure_long(e), \
+                                         ensure_long(p), ensure_long(q), ensure_long(d)
 
         if passphrase is not None and passphrase.strip() == '':
             passphrase = None
@@ -144,8 +144,16 @@ class RSAHelper(object):
         :return:
         """
         cipher = self.encoding_2_long(cipher, self.cipher_encoding)
-        d = inverse(self.e, (self.p - 1) * (self.q - 1))
-        n = self.p * self.q
+        if self.d is not None:
+            d = self.d
+        else:
+            d = inverse(self.e, (self.p - 1) * (self.q - 1))
+
+        if self.n is not None:
+            n = self.n
+        else:
+            n = self.p * self.q
+
         rsa = RSA.construct((n, self.e, d))
         if self.padding == 'PKCS1_OAEP':
             rsa = PKCS1_OAEP.new(rsa)

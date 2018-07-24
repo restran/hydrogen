@@ -6,4 +6,4 @@ from . import atbash_cipher, bacon_cipher, bacon_case_cipher, \
     caesar, caesar_odd_even, caesar_printable, caesar_rail_fence, \
     manchester, mobile_keyboard, polybius_square, quoted_printable, qwerty_cipher, \
     rail_fence, rc4, rot13, shadow_code, vigenere, xxencode, modified_base64, char_count, \
-    caesar_inc_dec, caesar_inc_dec_printable
+    caesar_inc_dec, caesar_inc_dec_printable, remove_duplicated

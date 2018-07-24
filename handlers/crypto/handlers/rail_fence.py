@@ -32,6 +32,9 @@ def decode(e, verbose=False):
         result.append(x)
         p.print(x)
 
+    if len(field) == 0:
+        p.print('字符串长度为质数，无法自动找到合适的栏数')
+
     return p.smart_output(result=result, verbose=verbose)
 
 

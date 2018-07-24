@@ -22,6 +22,9 @@ def smart_text(s):
             s = text_type(s)
     except:
         s = text_type(s)
+
+    if isinstance(s, bytes):
+        s = text_type(s)
     return s
 
 

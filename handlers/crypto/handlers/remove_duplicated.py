@@ -7,28 +7,21 @@ from collections import Counter
 from mountains.utils import PrintCollector
 
 """
-字符频率统计
+一行一个数据去重
 """
 
 
 def decode(data, verbose=False):
     p = PrintCollector()
-    r = Counter(data)
-    length = len(data)
-    data = [{'k': k, 'v': v} for k, v in r.items()]
-    data1 = sorted(data, key=lambda a: a['v'], reverse=False)
-    p.print('从小到大: ')
-    for t in data1:
-        k, v = t['k'], t['v']
-        p.print('{}: {:.1f}%, {}'.format(k, v / length * 100, v))
+    data_list = data.splitlines()
+    new_data = []
+    data_dict = {}
+    for t in data_list:
+        if t not in data_dict:
+            new_data.append(t)
+            data_dict[t] = None
 
-    data2 = sorted(data, key=lambda a: a['v'], reverse=True)
-    p.print('')
-    p.print('从大到小: ')
-    for t in data2:
-        k, v = t['k'], t['v']
-        p.print('{}: {:.1f}%, {}'.format(k, v / length * 100, v))
-
+    p.print('\n'.join(new_data))
     return p.smart_output(verbose=verbose)
 
 

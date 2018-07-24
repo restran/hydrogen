@@ -20,6 +20,9 @@ def decode(data, verbose=False):
             d = caesar_decode(t, key)
             p.print(d)
 
+    if len(output) == 0:
+        p.print('字符串长度为质数，无法自动找到合适的栏数')
+
     return p.smart_output(verbose=verbose)
 
 
