@@ -7,6 +7,7 @@ from tornado.web import RequestHandler
 from handlers.converter import api as converter_api
 from handlers.crypto import api as crypto_api
 from handlers.http import api as http_api
+from handlers.misc import api as misc_api
 from settings import get_path
 
 
@@ -34,4 +35,5 @@ url_handlers = [
     (r'/api/http/request/', http_api.HTTPRequest),
     (r'/api/http/proxy/', http_api.HTTPProxy),
     (r'/api/http/proxy-interceptor/', http_api.HTTPInterceptor),
+    (r'/api/misc/utility/', misc_api.UtilityHandler),
 ]
