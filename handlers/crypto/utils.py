@@ -20,7 +20,7 @@ def ensure_long(c):
 
     if not isinstance(c, int):
         if len(c) == 0:
-            return 0
+            return None
         if c.lower().startswith('0x'):
             return int(hex2dec(c[2:]))
         else:

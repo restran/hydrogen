@@ -130,10 +130,10 @@ class RSAToPEMKey(APIHandler):
         if self.request.json is None:
             return self.fail()
 
-        n = self.request.json.get('n', '')
-        e = self.request.json.get('e', '')
-        p = self.request.json.get('p', '')
-        q = self.request.json.get('q', '')
+        n = self.request.json.get('n', '').strip()
+        e = self.request.json.get('e', '').strip()
+        p = self.request.json.get('p', '').strip()
+        q = self.request.json.get('q', '').strip()
 
         if n == '':
             return self.fail(msg='n不能为空')

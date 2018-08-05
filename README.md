@@ -72,6 +72,10 @@ Windows 环境下可以使用 pyinstaller 打包成一个文件，不显示控�
 
     pyinstaller --onefile --exclude-module=django --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --icon=assets/icon.ico main.py
 
+pywebview 2.0 以上版本
+
+    pyinstaller --onefile --windowed --exclude-module=django --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --add-data "C:\Python36\Lib\site-packages\webview\lib\WebBrowserInterop.x64.dll;./" --add-data "C:\Python36\Lib\site-packages\webview\lib\WebBrowserInterop.x86.dll;./" --icon=assets/icon.ico main.py
+    
 ### Build Mac Binary
 
 Mac 环境下可以使用 [py2app](https://pypi.python.org/pypi/py2app/) 来打包，可以参考[这篇文章](http://www.jianshu.com/p/afb6b2b97ce9)。py2app 使用 0.14 和 0.15 版本打包有问题，可以降级到 0.12 版本。
