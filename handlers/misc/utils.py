@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 # Created by restran on 2018/8/1
 from __future__ import unicode_literals, absolute_import
+
+import base64
 import socket
 import struct
-from mountains.utils import PrintCollector
 from collections import Counter
-
+from mountains import force_bytes, force_text
+from future.moves.urllib.parse import unquote
+from mountains.http import query_str_2_dict
 from mountains.utils import PrintCollector
 
 
@@ -57,5 +60,35 @@ def char_count(data, *args, **kwargs):
     for t in data2:
         k, v = t['k'], t['v']
         p.print('{}: {:.1f}%, {}'.format(k, v / length * 100, v))
+
+    return p.smart_output()
+
+
+def caidao_decode(data, *args, **kwargs):
+    p = PrintCollector()
+    data_dict = query_str_2_dict(data.strip())
+    d = {}
+    for k, v in data_dict.items():
+        v = unquote(v)
+        try:
+            x = force_bytes(v)
+            missing_padding = len(v) % 4
+            if missing_padding != 0:
+                x += b'=' * (4 - missing_padding)
+
+            d[k] = force_text(base64.decodebytes(x))
+        except Exception as e:
+            print(e)
+            d[k] = v
+
+    z0_raw = ''
+    if 'z0' in d:
+        z0_raw = d['z0']
+        d['z0'] = ';\n'.join(d['z0'].split(';'))
+
+    for k, v in d.items():
+        p.print('{}:\n{}\n'.format(k, v))
+        if k == 'z0':
+            p.print('z0_raw:\n{}\n'.format(z0_raw))
 
     return p.smart_output()

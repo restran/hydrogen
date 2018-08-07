@@ -35,6 +35,8 @@ def do_utility_handle(method, data, params, multiple_input):
         func = remove_duplicated
     elif method == 'char_count':
         func = char_count
+    elif method == 'caidao_decode':
+        func = caidao_decode
     else:
         result = '!!!error!!! method %s not found' % method
         return result
