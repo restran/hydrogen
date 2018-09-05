@@ -12,6 +12,9 @@ from Cryptodome.Util.number import inverse, bytes_to_long, long_to_bytes
 from mountains import force_bytes, force_text, text_type
 
 from ..converter.handlers.converter import hex2dec
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_long(c):
@@ -32,7 +35,7 @@ class RSAHelper(object):
     def __init__(self, n=None, e=None, p=None, q=None, d=None, padding='NoPadding',
                  passphrase=None, plain_encoding='Decimal', cipher_encoding='Decimal'):
         self.n, self.e, self.p, self.q, self.d = ensure_long(n), ensure_long(e), \
-                                         ensure_long(p), ensure_long(q), ensure_long(d)
+                                                 ensure_long(p), ensure_long(q), ensure_long(d)
 
         if passphrase is not None and passphrase.strip() == '':
             passphrase = None
@@ -90,6 +93,7 @@ class RSAHelper(object):
         elif encoding == 'UTF8':
             data = force_bytes(data)
         elif encoding == 'Decimal':
+            logger.info(data)
             return int(data)
         else:
             data = force_bytes(data)

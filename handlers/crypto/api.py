@@ -190,13 +190,14 @@ class RSAEncryptDecrypt(APIHandler):
         plain_encoding = self.request.json.get('plain_encoding', 'Decimal')
         cipher_encoding = self.request.json.get('cipher_encoding', 'Decimal')
 
-        if n == '':
-            return self.fail(msg='n不能为空')
         if e == '':
             return self.fail(msg='e不能为空')
 
         if (p == '' and q != '') or (p != '' and q == ''):
             return self.fail(msg='p和q不能为空')
+
+        if n == '' and (p == '' or q == ''):
+            return self.fail(msg='n不能为空')
 
         try:
             rsa = RSAHelper(n, e, p, q, d, padding=padding,
@@ -204,11 +205,16 @@ class RSAEncryptDecrypt(APIHandler):
                             cipher_encoding=cipher_encoding)
             if action == 'decrypt':
                 if (p != '' and q != '') or d != '':
+                    if cipher == '':
+                        return self.fail(msg='密文不能为空')
                     plain = rsa.decrypt(cipher)
                 else:
                     return self.fail(msg='p和q或者d不能为空')
             else:
-                if n != '' and e != '':
+                if (n != '' or (p != '' and q != '')) and e != '':
+                    if plain == '':
+                        return self.fail(msg='明文不能为空')
+
                     cipher = rsa.encrypt(plain)
                 else:
                     return self.fail(msg='n和e不能为空')
@@ -218,6 +224,7 @@ class RSAEncryptDecrypt(APIHandler):
             msg = '%s, %s' % ('RSA加解密失败', e)
 
             return self.fail(msg=msg)
+
         data = {
             'plain': str(plain),
             'cipher': str(cipher),

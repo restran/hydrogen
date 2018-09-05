@@ -118,4 +118,7 @@ def detect_code_scheme(e_str):
     if shadow_code.match(e_str):
         scheme_list.append('shadow code')
 
+    if e_str.startswith('PYIIIIIIIIII'):
+        scheme_list.append('win32 shellcode')
+
     return scheme_list
