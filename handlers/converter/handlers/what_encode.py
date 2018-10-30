@@ -77,7 +77,7 @@ parser.add_option("-v", "--verbose", dest="verbose", default=False,
 class WhatEncode(object):
     def __init__(self, data_str, method_list=None, file_name=None,
                  save_file_name=None, only_printable=False,
-                 printable_percent=1.0, max_depth=10, verbose=False):
+                 printable_percent=.75, max_depth=10, verbose=False):
         """
 
         :param data_str:
@@ -96,6 +96,8 @@ class WhatEncode(object):
         self.printable_percent = printable_percent
         self.verbose = verbose
         self.max_depth = max_depth
+        # 上一个解码结果为可打印字符
+        self.last_result_printable = True
 
         if self.file_name is not None:
             with open(self.file_name, 'rb') as f:
@@ -317,8 +319,10 @@ class WhatEncode(object):
                 decode_str = ''.join(ascii_list)
             elif decode_method in ['swap_case', 'reverse_alphabet', 'reverse']:
                 # 如果这里不做限制，会无限递归下去
-                if len(m_list) > 0 and m_list[-1] in ['swap_case', 'reverse_alphabet', 'reverse']:
-                    return False, raw_encode_str
+                if len(m_list) > 0:
+                    for t in ['swap_case', 'reverse_alphabet', 'reverse']:
+                        if t in m_list:
+                            return False, raw_encode_str
 
                 # 一定要包含 ascii 字符
                 tmp_data = [t for t in encode_str if t in string.ascii_letters]
@@ -381,6 +385,9 @@ class WhatEncode(object):
 
                 try:
                     decode_str = zlib.decompress(force_bytes(encode_str))
+                    if self.calc_printable_percent(decode_str) < self.printable_percent:
+                        return False, raw_encode_str
+
                 except:
                     return False, raw_encode_str
             else:
@@ -391,27 +398,46 @@ class WhatEncode(object):
             elif force_bytes(encode_str) == force_bytes(decode_str):
                 return False, raw_encode_str
             else:
-
                 # 解码的内容只有可打印字符，才认为合法
                 if self.only_printable:
-                    decode_str = force_text(decode_str)
-                    if isinstance(decode_str, bytes):
-                        return False, raw_encode_str
-                    tmp_decode_str = list(decode_str)
-                    printable_count = 0
-                    for t in tmp_decode_str:
-                        if str(t) in string.printable:
-                            printable_count += 1
+                    printable_percent = 1.0
+                else:
+                    printable_percent = self.printable_percent
 
-                    # 如果可打印字符低于一定的百分比，就认为解码失败
-                    if printable_count * 1.0 / len(tmp_decode_str) < self.printable_percent:
+                is_printable = True
+                # 如果可打印字符低于一定的百分比，就认为解码失败
+                if self.calc_printable_percent(decode_str) < printable_percent:
+                    is_printable = False
+
+                if is_printable is False:
+                    if self.last_result_printable is False:
                         return False, raw_encode_str
+
+                self.last_result_printable = is_printable
 
                 return True, decode_str
         except Exception as e:
             if self.verbose:
                 logger.exception(e)
             return False, raw_encode_str
+
+    def calc_printable_percent(self, data):
+        tmp_decode_str = list(data)
+        if len(tmp_decode_str) <= 0:
+            return 0
+        printable_count = 0
+        for t in tmp_decode_str:
+            if isinstance(t, int):
+                t = chr(t)
+            else:
+                t = str(t)
+            if t in string.printable:
+                printable_count += 1
+
+        x = printable_count * 1.0 / len(tmp_decode_str)
+        print(x)
+        print(data)
+        return x
 
     def parse(self):
         encode_str = self.data_str
@@ -432,6 +458,7 @@ class WhatEncode(object):
                 has_print = False
                 for i, m in enumerate(encode_methods):
                     tmp_m_list = deepcopy(m_list)
+                    self.last_result_printable = True
                     success, decode_str = self.parse_str(data, m, tmp_m_list)
 
                     if success:
@@ -452,11 +479,12 @@ class WhatEncode(object):
                                     item['m_list'] = tmp_m_list
                                     item['methods'] = '->'.join(tmp_m_list)
                             else:
-                                result_method_dict[md5] = {
-                                    'data': decode_str,
-                                    'm_list': tmp_m_list,
-                                    'methods': '->'.join(tmp_m_list)
-                                }
+                                if self.calc_printable_percent(decode_str) >= self.printable_percent:
+                                    result_method_dict[md5] = {
+                                        'data': '%s' % decode_str,
+                                        'm_list': tmp_m_list,
+                                        'methods': '->'.join(tmp_m_list)
+                                    }
 
             should_try_list = new_should_try_list
 
