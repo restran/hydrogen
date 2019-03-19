@@ -13,7 +13,7 @@ import tornado.options
 import tornado.web
 from mountains import logging
 from mountains.logging import StreamHandler, RotatingFileHandler
-
+import sys
 import settings
 from settings import get_path
 from urls import url_handlers
@@ -70,22 +70,28 @@ class Application(tornado.web.Application):
             debug=False,
             static_path=get_path('static'),
         )
-        self.database = records.Database('sqlite:///database.db')
+
         tornado.web.Application.__init__(self, url_handlers, **tornado_settings)
 
-        sql = "select name from sqlite_master where type='table' order by name"
-        rows = self.database.query(sql).as_dict()
-        name_set = set([t['name'] for t in rows])
-        if 'interceptor' not in name_set:
-            self.database.query(SQL_CREATE_TABLE_INTERCEPTOR)
+        # Mac 环境下 records.Database 创建数据库连接这一步会卡住，不知道什么原因
+        if sys.platform != 'darwin':
+            self.database = records.Database('sqlite:///' + get_path('data/database.db'))
+            sql = "select name from sqlite_master where type='table' order by name"
+            rows = self.database.query(sql).as_dict()
+            name_set = set([t['name'] for t in rows])
+            if 'interceptor' not in name_set:
+                self.database.query(SQL_CREATE_TABLE_INTERCEPTOR)
 
-        if 'http_history' not in name_set:
-            self.database.query(SQL_CREATE_TABLE_HTTP_HISTORY)
-            for t in SQL_CREATE_INDEX_HTTP_HISTORY:
-                self.database.query(t)
+            if 'http_history' not in name_set:
+                self.database.query(SQL_CREATE_TABLE_HTTP_HISTORY)
+                for t in SQL_CREATE_INDEX_HTTP_HISTORY:
+                    self.database.query(t)
+        else:
+            self.database = None
 
 
 def run_server():
+    logger.info('start run hydrogen')
     # 为了能在线程中启动 tornado 的 event_loop
     import asyncio
     asyncio.set_event_loop(asyncio.new_event_loop())

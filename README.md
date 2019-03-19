@@ -28,8 +28,12 @@ Linux
 
 Mac
 
+    export PYCURL_SSL_LIBRARY=openssl
+    export LDFLAGS=-L/usr/local/opt/openssl/lib
+    export CPPFLAGS=-I/usr/local/opt/openssl/include
+    pip3 install pycurl --compile --no-cache-dir
+    
     pip3 install pywebview[cocoa]
-    pip3 install PyQt5
 
 在 hydrogen 目录下运行
 

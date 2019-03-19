@@ -98,10 +98,10 @@ def gen_signed_cert(domain):
     domain name(replacing dots by underscores), finally signing the certificate using specified CA and
     returns the path of key and cert files. If you are yet to generate a CA then check the top comments
     """
-    ca_crt = os.path.join(get_path('ca'), 'ca.crt')
-    ca_key = os.path.join(get_path('ca'), 'ca.key')
-    key_path = os.path.join(get_path('ca'), 'cert.key')
-    certs_folder = get_path('certs')
+    ca_crt = os.path.join(get_path('data/ca'), 'ca.crt')
+    ca_key = os.path.join(get_path('data/ca'), 'ca.key')
+    key_path = os.path.join(get_path('data/ca'), 'cert.key')
+    certs_folder = get_path('data/certs')
 
     cert_path = os.path.join(certs_folder, domain.replace('.', '_').replace('*', '_') + '.crt')
     if os.path.exists(key_path) and os.path.exists(cert_path):

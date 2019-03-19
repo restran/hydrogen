@@ -1,6 +1,8 @@
 .idea/
 log.txt
 certs/*
+data/certs/*
+data/database.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

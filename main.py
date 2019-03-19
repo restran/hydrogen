@@ -8,7 +8,7 @@ from time import sleep
 
 import requests
 import webview
-
+import sys
 import settings
 from utils import is_port_open
 
@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 # 通过这种方式运行，DEBUG 不能为 True
 settings.DEBUG = False
 settings.PORT = settings.PRODUCT_PORT
+
+if sys.platform == 'win32':
+    # CTF Python 使用 Chrome 66
+    webview.gui = 'cef'
 
 while is_port_open('127.0.0.1', settings.PORT):
     logger.info('port %s is unavailable' % settings.PORT)

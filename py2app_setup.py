@@ -22,7 +22,7 @@ DATA_FILES = []
 OPTIONS = {
     'argv_emulation': True,
     'strip': True,
-    'resources': ['static', 'templates'],
+    'resources': ['static', 'templates', 'data'],
     'iconfile': 'assets/icon.icns',
     'excludes': [],
     'includes': ['WebKit', 'Foundation', 'webview'],
@@ -38,7 +38,7 @@ OPTIONS = {
         'CFBundleIdentifier': "net.restran.mac.%s" % APP_NAME.lower(),
         'CFBundleVersion': VERSION,
         'CFBundleShortVersionString': VERSION,
-        'NSHumanReadableCopyright': "Copyright © 2018, Restran, All Rights Reserved"
+        'NSHumanReadableCopyright': "Copyright © 2019, Restran, All Rights Reserved"
     }
 }
 

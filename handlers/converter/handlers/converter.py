@@ -8,7 +8,7 @@ from __future__ import unicode_literals, absolute_import
 import base64
 import binascii
 import string
-from base64 import b64decode, b32decode, b16decode
+from base64 import b64decode, b32decode, b16decode, urlsafe_b64encode, urlsafe_b64decode
 from xml.sax.saxutils import escape as xml_escape_func
 from xml.sax.saxutils import unescape as xml_unescape_func
 
@@ -54,6 +54,14 @@ def partial_base32_decode(data):
 
 def partial_base16_decode(data):
     return partial_decode(b16decode, data, 2)
+
+
+def url_safe_b64encode(data):
+    return force_text(urlsafe_b64encode(force_bytes(data)))
+
+
+def url_safe_b64decode(data):
+    return force_text(urlsafe_b64decode(force_bytes(data)))
 
 
 def to_base64(data):

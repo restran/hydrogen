@@ -23,7 +23,6 @@ from tornado.gen import is_future
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from tornado.httputil import HTTPHeaders
 from tornado.web import RequestHandler
-from tornado.web import asynchronous
 
 from handlers.http.proxy.utils import wrap_socket
 
@@ -229,7 +228,7 @@ class ProxyHandler(RequestHandler):
             except Exception as e:
                 logger.exception(e)
 
-    @asynchronous
+    @gen.coroutine
     def connect(self):
         if self.application.intercept_https:
             self.connect_intercept()
