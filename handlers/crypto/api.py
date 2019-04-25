@@ -8,7 +8,7 @@ from mountains import text_type
 
 from handlers.crypto import handlers
 from utils import APIHandler
-from .utils import RSAHelper, AESHelper
+from .utils import RSAHelper, AESHelper, DESHelper
 
 logger = logging.getLogger(__name__)
 
@@ -99,9 +99,6 @@ class RSAFromPEMKey(APIHandler):
     """
 
     def post(self):
-        if self.request.json is None:
-            return self.fail()
-
         if self.request.json is None:
             return self.fail()
 
@@ -233,6 +230,34 @@ class RSAEncryptDecrypt(APIHandler):
         return self.success(data)
 
 
+class RSACalcD(APIHandler):
+    """
+    根据 p、q、e 计算 d
+    :return:
+    """
+
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
+
+        e = self.request.json.get('e', '').strip()
+        p = self.request.json.get('p', '').strip()
+        q = self.request.json.get('q', '').strip()
+
+        if e == '':
+            return self.fail(msg='e不能为空')
+
+        if p == '' or q == '':
+            return self.fail(msg='p和q不能为空')
+
+        try:
+            rsa = RSAHelper(n=None, e=e, p=p, q=q)
+            d = rsa.calc_d()
+            return self.success(d)
+        except Exception as e:
+            return self.error(msg=str(e))
+
+
 class AESEncryptDecrypt(APIHandler):
     """
     aes 加解密
@@ -265,6 +290,50 @@ class AESEncryptDecrypt(APIHandler):
         except Exception as e:
             logger.exception(e)
             msg = '%s, %s' % ('AES加解密失败', e)
+
+            return self.fail(msg=msg)
+
+        data = {
+            'plain': text_type(plain),
+            'cipher': text_type(cipher),
+        }
+
+        return self.success(data)
+
+
+class DESEncryptDecrypt(APIHandler):
+    """
+    des 加解密
+    :return:
+    """
+
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
+
+        action = self.request.json.get('action', '')
+        is_triple_des = self.request.json.get('is_triple_des', False)
+        key = self.request.json.get('key', '')
+        key_encoding = self.request.json.get('key_encoding', '')
+        mode = self.request.json.get('mode', '')
+        iv = self.request.json.get('iv', '')
+        iv_encoding = self.request.json.get('iv_encoding', '')
+        padding = self.request.json.get('padding', '')
+        plain_encoding = self.request.json.get('plain_encoding', '')
+        cipher_encoding = self.request.json.get('cipher_encoding', '')
+        plain = self.request.json.get('plain', '')
+        cipher = self.request.json.get('cipher', '')
+
+        try:
+            des = DESHelper(key, iv, key_encoding, iv_encoding, mode,
+                            padding, plain_encoding, cipher_encoding, is_triple_des)
+            if action == 'decrypt':
+                plain = des.decrypt(cipher)
+            else:
+                cipher = des.encrypt(plain)
+        except Exception as e:
+            logger.exception(e)
+            msg = '%s, %s' % ('DES加解密失败', e)
 
             return self.fail(msg=msg)
 

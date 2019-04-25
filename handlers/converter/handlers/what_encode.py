@@ -17,7 +17,7 @@ from future.moves.urllib.parse import unquote_plus
 from mountains import PY3, PY2
 from mountains.encoding import force_text, force_bytes
 
-from handlers.converter.handlers.converter import partial_base16_decode, base_padding, hex2str
+from handlers.converter.handlers.converter import partial_base16_decode, base_padding, hex2str, from_base58
 from handlers.crypto.handlers.rot13 import decode_rot13
 
 logger = logging.getLogger(__name__)
@@ -40,6 +40,7 @@ encode_methods = [
     'base16',  # base16 其实就是16进制
     'ascii_85',  # ascii85
     'base85',  # base85
+    'base58',  # base58
     'binary',  # 01010101
     'octal',  # 八进制
     'octal_binary',  # 八进制直接转成16进制的二进制格式
@@ -180,6 +181,17 @@ class WhatEncode(object):
                 # 自动纠正填充
                 if self.regex_match(rex, encode_str):
                     decode_str = urlsafe_b64decode(base_padding(encode_str, 4))
+                else:
+                    return False, raw_encode_str
+            elif decode_method == 'base58':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
+                if len(encode_str) < 4:
+                    return False, raw_encode_str
+
+                rex = re.compile('^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$', re.MULTILINE)
+                # 自动纠正填充
+                if self.regex_match(rex, encode_str):
+                    decode_str = from_base58(encode_str)
                 else:
                     return False, raw_encode_str
             elif decode_method == 'ascii_85':

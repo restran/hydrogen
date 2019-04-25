@@ -11,7 +11,7 @@ import string
 from base64 import b64decode, b32decode, b16decode, urlsafe_b64encode, urlsafe_b64decode
 from xml.sax.saxutils import escape as xml_escape_func
 from xml.sax.saxutils import unescape as xml_unescape_func
-
+from handlers.converter.handlers.base58 import b58decode, b58encode
 from mountains.encoding import force_bytes, force_text
 
 
@@ -80,7 +80,11 @@ def from_base64(data):
     :return: 字符串
     """
     data = base_padding(data, 4)
-    return base64.b64decode(data)
+    try:
+        r = base64.b64decode(data)
+    except:
+        r = partial_base64_decode(data)
+    return r
 
 
 def to_base32(data):
@@ -89,7 +93,7 @@ def to_base32(data):
     :param data: 字符串
     :return: BASE32字符串
     """
-    return base64.b32encode(data)
+    return base64.b32encode(force_bytes(data))
 
 
 def from_base32(data):
@@ -99,7 +103,11 @@ def from_base32(data):
     :return: 字符串
     """
     data = base_padding(data, 8)
-    return base64.b32decode(data)
+    try:
+        r = base64.b32decode(data)
+    except:
+        r = partial_base32_decode(data)
+    return r
 
 
 def to_base16(data):
@@ -108,7 +116,7 @@ def to_base16(data):
     :param data: 字符串
     :return: BASE16字符串
     """
-    return base64.b16encode(data)
+    return base64.b16encode(force_bytes(data))
 
 
 def from_base16(data):
@@ -118,6 +126,14 @@ def from_base16(data):
     :return: 字符串
     """
     return base64.b16decode(data)
+
+
+def from_base58(data):
+    return b58decode(force_bytes(data))
+
+
+def to_base58(data):
+    return b58encode(force_bytes(data))
 
 
 def to_uu(data):

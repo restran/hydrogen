@@ -87,8 +87,10 @@ def caidao_decode(data, *args, **kwargs):
         d['z0'] = ';\n'.join(d['z0'].split(';'))
 
     for k, v in d.items():
-        p.print('{}:\n{}\n'.format(k, v))
+        value = '{}:\n{}\n'.format(k, v)
+        p.print(value)
         if k == 'z0':
-            p.print('z0_raw:\n{}\n'.format(z0_raw))
+            if value != 'z0:\n{}\n'.format(z0_raw):
+                p.print('z0_raw:\n{}\n'.format(z0_raw))
 
     return p.smart_output()

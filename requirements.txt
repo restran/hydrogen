@@ -2,10 +2,10 @@ records
 cryptography
 tornado==5.1.1
 requests
-bottle
 future
 pycurl>=7.43.0.1
 pycryptodomex
 mountains>=0.5.4
-pywebview
+pywebview==2.2.1
 pycipher
+ds_store

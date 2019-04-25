@@ -9,6 +9,9 @@ from Cryptodome.Cipher import AES, PKCS1_OAEP, PKCS1_v1_5
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Util.Padding import pad, unpad
 from Cryptodome.Util.number import inverse, bytes_to_long, long_to_bytes
+from Cryptodome.Cipher import DES
+from Cryptodome.Cipher import DES3
+
 from mountains import force_bytes, force_text, text_type
 
 from ..converter.handlers.converter import hex2dec
@@ -171,6 +174,10 @@ class RSAHelper(object):
 
         plain = self.long_2_encoding(bytes_to_long(plain), self.plain_encoding)
         return plain
+
+    def calc_d(self):
+        d = inverse(self.e, (self.p - 1) * (self.q - 1))
+        return d
 
 
 class ZeroPadding(object):
@@ -346,6 +353,154 @@ class AESHelper(object):
             else:
                 plain = self.pad(plain, self.padding)
                 cipher = aes.encrypt(plain)
+        return self.bytes_2_encoding(cipher, self.cipher_encoding)
+
+
+class DESHelper(object):
+    def __init__(self, key, iv, key_encoding, iv_encoding,
+                 mode, padding, plain_encoding, cipher_encoding, is_triple_des=False):
+        self.key_encoding = key_encoding
+        self.iv_encoding = iv_encoding
+        self.mode = mode
+        self.padding = padding
+        self.plain_encoding = plain_encoding
+        self.cipher_encoding = cipher_encoding
+        self.key = key
+        self.iv = iv
+        self.is_triple_des = is_triple_des
+
+    def key_padding(self, key, key_padding_size=8):
+        len_key = len(key)
+        if len_key < key_padding_size:
+            key += (key_padding_size - len(key) % key_padding_size) * b'\x00'
+        else:
+            key = key[:key_padding_size]
+
+        return key
+
+    def prepare(self):
+        self.key = self.encoding_2_bytes(self.key, self.key_encoding)
+        self.iv = self.encoding_2_bytes(self.iv, self.iv_encoding)
+
+        if self.is_triple_des:
+            # 三重DES的密钥是16或者24字节
+            # 遇到不符合的，通常是在后面添加\0填充密钥
+            self.key = self.key_padding(self.key, 24)
+        else:
+            self.key = self.key_padding(self.key, 8)
+        self.iv = self.key_padding(self.iv, 8)
+
+    def pad(self, s, padding, bs=DES.block_size):
+        if padding == 'ZeroPadding':
+            return ZeroPadding(bs).pad(s)
+        elif padding == 'NoPadding':
+            return NoPadding(bs).pad(s)
+        elif padding == 'PKCS5':
+            return PKCS7Padding(bs).pad(s)
+        elif padding in ('PKCS7', 'X923', 'ISO7816'):
+            return pad(s, bs, padding.lower())
+        else:
+            return s
+
+    def unpad(self, s, padding, bs=DES.block_size):
+        if padding == 'ZeroPadding':
+            return ZeroPadding(bs).unpad(s)
+        elif padding == 'PKCS5':
+            return PKCS7Padding(bs).unpad(s)
+        elif padding in ('PKCS7', 'X923', 'ISO7816'):
+            return unpad(s, bs, padding.lower())
+        if padding == 'NoPadding':
+            return NoPadding(bs).unpad(s)
+        else:
+            return s
+
+    def encoding_2_bytes(self, data, encoding):
+        if encoding == 'Hex':
+            if data[:2].lower() == '0x':
+                data = data[2:]
+            data = binascii.a2b_hex(data)
+        elif encoding == 'Base64':
+            data = b64decode(data)
+        elif encoding == 'UTF8':
+            data = force_bytes(data)
+        else:
+            data = force_bytes(data)
+
+        return data
+
+    def bytes_2_encoding(self, data, encoding):
+        if encoding == 'UTF8':
+            data = force_text(data)
+        elif encoding == 'Hex':
+            data = binascii.b2a_hex(data)
+        elif encoding == 'Base64':
+            data = b64encode(data)
+        else:
+            data = force_text(data)
+
+        if isinstance(data, bytes):
+            data = text_type(data)[2:-1]
+        return data
+
+    def decrypt(self, cipher):
+        self.prepare()
+
+        if self.is_triple_des:
+            des_cls = DES3
+        else:
+            des_cls = DES
+
+        des = None
+        if self.mode == 'ECB':
+            des = des_cls.new(self.key, des_cls.MODE_ECB)
+        elif self.mode == 'CBC':
+            des = des_cls.new(self.key, des_cls.MODE_CBC, self.iv)
+        elif self.mode == 'CFB':
+            des = des_cls.new(self.key, des_cls.MODE_CFB, self.iv)
+        elif self.mode == 'OFB':
+            des = des_cls.new(self.key, des_cls.MODE_OFB, self.iv)
+        elif self.mode == 'CTR':
+            des = des_cls.new(self.key, des_cls.MODE_CTR, self.iv)
+
+        if des is None:
+            plain = b''
+        else:
+            cipher = self.encoding_2_bytes(cipher, self.cipher_encoding)
+            plain = des.decrypt(cipher)
+            plain = self.unpad(plain, self.padding)
+        return self.bytes_2_encoding(plain, self.plain_encoding)
+
+    def encrypt(self, plain):
+        self.prepare()
+        if self.is_triple_des:
+            des_cls = DES3
+        else:
+            des_cls = DES
+
+        des = None
+        if self.mode == 'ECB':
+            des = des_cls.new(self.key, des_cls.MODE_ECB)
+        elif self.mode == 'CBC':
+            des = des_cls.new(self.key, des_cls.MODE_CBC, self.iv)
+        elif self.mode == 'CFB':
+            des = des_cls.new(self.key, des_cls.MODE_CFB, self.iv)
+        elif self.mode == 'OFB':
+            des = des_cls.new(self.key, des_cls.MODE_OFB, self.iv)
+        elif self.mode == 'CTR':
+            des = des_cls.new(self.key, des_cls.MODE_CTR, self.iv)
+
+        if des is None:
+            cipher = b''
+        else:
+            plain = self.encoding_2_bytes(plain, self.plain_encoding)
+            plain_len = len(plain)
+            if self.padding == 'NoPadding':
+                plain = self.pad(plain, self.padding)
+                cipher = des.encrypt(plain)
+                cipher = cipher[:plain_len]
+            else:
+                plain = self.pad(plain, self.padding)
+                cipher = des.encrypt(plain)
         return self.bytes_2_encoding(cipher, self.cipher_encoding)
 
 

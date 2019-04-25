@@ -2,7 +2,7 @@
 
 在做 CTF 的过程中，有一些编码转换等功能经常要使用，但是网上的各种工具都没有较满意的，而且也不能自定义一些功能，因此就有了这样一个项目，类似的项目还有[CTFCrackTools](https://github.com/0Chencc/CTFCrackTools)。
 
-这个工具使用了 Web 技术来实现，界面使用 Vue + Element 写的，后端使用了轻量级的 Web 框架 Bottle，在 Python 3 环境下，使用 [pywebview](https://github.com/r0x0r/pywebview) 实现窗口程序。
+这个工具使用了 Web 技术来实现，界面使用 Vue + Element 写的，后端使用了轻量级的 Web 框架 Tornado，在 Python 3 环境下，使用 [pywebview](https://github.com/r0x0r/pywebview) 实现窗口程序。
 
 前端界面的项目地址: [hydrogen-fe](https://github.com/restran/hydrogen-fe)
 
@@ -65,6 +65,8 @@ mkdir certs/
 ```
 
 ## 打包成可执行文件
+
+打包成可执行文件建议使用 virtualenv 建立虚拟的 Python 环境，然后单独安装依赖包，否则会导致打包出来的文件很大。
 
 ### Build Windows Binary
 

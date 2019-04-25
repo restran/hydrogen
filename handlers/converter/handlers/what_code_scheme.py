@@ -36,6 +36,10 @@ def detect_code_scheme(e_str):
         scheme_list.append('base64')
         # print('base64')
 
+    b58rex = re.compile('^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]$', re.MULTILINE)
+    if b58rex.match(e_str):
+        scheme_list.append('base58')
+
     b32rex = re.compile('^[A-Z2-7]+[=]{0,2}$', re.MULTILINE)
     if b32rex.match(e_str):
         scheme_list.append('base32')

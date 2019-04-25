@@ -4,9 +4,9 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 from base64 import b64encode
-
+from ds_store import DSStore
 from mountains import text_type, force_bytes, force_text
-
+from io import BytesIO
 from handlers.converter.handlers import converter, what_encode as what_encode_handler
 from handlers.converter.handlers.what_code_scheme import detect_code_scheme
 from utils import APIHandler
@@ -142,5 +142,22 @@ class FileConverter(APIHandler):
 
         data = {
             'content': content
+        }
+        return self.success(data)
+
+
+class ParseDsStore(APIHandler):
+    def post(self):
+        file_content = self.request.files.get('file')[0].body
+        fio = BytesIO()
+        fio.write(file_content)
+
+        result = []
+        with DSStore.open(fio, 'rb') as d:
+            for t in d:
+                result.append(text_type(t))
+
+        data = {
+            'content': '\n'.join(result)
         }
         return self.success(data)
