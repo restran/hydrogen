@@ -8,6 +8,7 @@ from mountains import text_type
 
 from handlers.crypto import handlers
 from utils import APIHandler
+from utils.find_ctf_flag import find_flag
 from .utils import RSAHelper, AESHelper, DESHelper
 
 logger = logging.getLogger(__name__)
@@ -85,6 +86,64 @@ class DecodeData(APIHandler):
         if result is None:
             result = '!!!error!!!'
 
+        return self.success(result)
+
+
+class FuzzingDecodeData(APIHandler):
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
+
+        data = self.request.json.get('data')
+        params = self.request.json.get('params')
+        if data is None:
+            return self.fail()
+
+        method_list = [
+            'atbash_cipher', 'bacon_case_cipher', 'bacon_cipher', 'caesar', 'caesar_inc_dec',
+            'caesar_inc_dec_printable', 'caesar_odd_even', 'caesar_printable', 'caesar_rail_fence',
+            'manchester', 'mobile_keyboard', 'modified_base64', 'pigpen_cipher',
+            'polybius_square', 'quoted_printable', 'qwerty_cipher', 'rail_fence', 'rc4',
+            'rot13', 'shadow_code', 'vigenere', 'xxencode'
+        ]
+
+        result_list = []
+        for method in method_list:
+            try:
+                result = do_decode(method, data, params)
+                result_list.append(result)
+            except:
+                pass
+
+        flag_results = find_flag('\n'.join(result_list))
+        result = '\n'.join(flag_results)
+        if result == '':
+            result = '!!!nothing found!!!'
+        return self.success(result)
+
+
+class FindFlagFromString(APIHandler):
+    def post(self):
+        if self.request.json is None:
+            return self.fail()
+
+        data = self.request.json.get('data')
+        if data is None:
+            return self.fail()
+
+        if not isinstance(data, list):
+            data = [data]
+
+        result_dict = {}
+        for content in data:
+            if content == '':
+                continue
+
+            find_flag(content, result_dict=result_dict)
+
+        result = '\n'.join(result_dict.keys())
+        if result == '':
+            result = '!!!nothing found!!!'
         return self.success(result)
 
 

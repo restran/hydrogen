@@ -29,6 +29,8 @@ url_handlers = [
     (r'/api/converter/file-converter/', converter_api.FileConverter),
     (r'/api/converter/parse-ds-store/', converter_api.ParseDsStore),
     (r'/api/crypto/decode-data/', crypto_api.DecodeData),
+    (r'/api/crypto/fuzzing/', crypto_api.FuzzingDecodeData),
+    (r'/api/crypto/find-flag-from-string/', crypto_api.FindFlagFromString),
     (r'/api/crypto/rsa-from-pem-key/', crypto_api.RSAFromPEMKey),
     (r'/api/crypto/rsa-to-pem-key/', crypto_api.RSAToPEMKey),
     (r'/api/crypto/rsa-calc-d/', crypto_api.RSACalcD),

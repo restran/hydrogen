@@ -73,7 +73,7 @@ mkdir certs/
 Windows 环境下可以使用 pyinstaller 打包成一个文件，不显示控制台，设置图标
 
     pyinstaller --onefile --windowed --exclude-module=django --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --icon=assets/icon.ico main.py
-    
+
 如果遇到问题需要调试，可以显示命令行
 
     pyinstaller --onefile --exclude-module=django --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --icon=assets/icon.ico main.py
@@ -81,10 +81,10 @@ Windows 环境下可以使用 pyinstaller 打包成一个文件，不显示控�
 pywebview 2.0 以上版本
 
     pyinstaller --onefile --windowed --exclude-module=django --add-data="static;static" --add-data="ca;ca" --add-data="certs;certs" --add-data="templates;templates" --add-data "C:\Python36\Lib\site-packages\webview\lib\WebBrowserInterop.x64.dll;./" --add-data "C:\Python36\Lib\site-packages\webview\lib\WebBrowserInterop.x86.dll;./" --icon=assets/icon.ico main.py
-    
+
 ### Build Mac Binary
 
-Mac 环境下可以使用 [py2app](https://pypi.python.org/pypi/py2app/) 来打包，可以参考[这篇文章](http://www.jianshu.com/p/afb6b2b97ce9)。py2app 使用 0.14 和 0.15 版本打包有问题，可以降级到 0.12 版本。
+Mac 环境下可以使用 [py2app](https://pypi.python.org/pypi/py2app/) 来打包，可以参考[这篇文章](http://www.jianshu.com/p/afb6b2b97ce9)。py2app 使用 0.14 和 0.15 版本打包有问题，可以降级到 0.12 版本。建议使用 virtualenv 建立虚拟环境，否则打包出来的文件可能会很大。
 
 py2app 提供了“别名模式”，该模式通过与开发文件象征性的链接构建应用，测试和开发的时候使用。
 
@@ -94,7 +94,7 @@ py2app 提供了“别名模式”，该模式通过与开发文件象征性的�
 
     rm -rf build dist
     python3 py2app_setup.py py2app
-    
+
 图标要使用 icns 格式 [IconFinder](https://www.iconfinder.com/) 和 [freepik](http://www.freepik.com/free-icons) 下载
 
 如果出现无法运行，需要进行调试，可以在打包后的程序，显示包内容，然后在命令行下面运行
