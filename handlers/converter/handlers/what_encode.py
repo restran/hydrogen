@@ -195,28 +195,28 @@ class WhatEncode(object):
                 else:
                     return False, raw_encode_str
             elif decode_method == 'ascii_85':
-                if len(encode_str) < 7:
+                if len(encode_str) < 4:
                     return False, raw_encode_str
 
                 if PY2:
                     return False, raw_encode_str
 
-                rex = re.compile('^[A-Za-z0-9!#$%&()*+\-;<=>?@^_`{|}~]+$', re.MULTILINE)
-                if self.regex_match(rex, encode_str):
+                try:
                     decode_str = a85decode(force_bytes(encode_str))
-                else:
+                    return True, decode_str
+                except:
                     return False, encode_str
             elif decode_method == 'base85':
-                if len(encode_str) < 7:
+                if len(encode_str) < 4:
                     return False, raw_encode_str
 
                 if PY2:
                     return False, raw_encode_str
 
-                rex = re.compile('^[A-Za-z0-9!#$%&()*+\-;<=>?@^_`{|}~]+$', re.MULTILINE)
-                if self.regex_match(rex, encode_str):
+                try:
                     decode_str = b85decode(force_bytes(encode_str))
-                else:
+                    return True, decode_str
+                except:
                     return False, encode_str
             elif decode_method == 'rot13':
                 # 如果这里不做限制，会无限递归下去

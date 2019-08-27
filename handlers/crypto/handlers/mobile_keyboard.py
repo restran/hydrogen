@@ -15,16 +15,17 @@ dict_map = {
     '61': 'm', '62': 'n', '63': 'o',
     '71': 'p', '72': 'q', '73': 'r', '74': 's',
     '81': 't', '82': 'u', '83': 'v',
-    '91': 'w', '92': 'x', '93': 'y', '94': 'z'
+    '91': 'w', '92': 'x', '93': 'y', '94': 'z',
+    '01': ' '
 }
 
 
 def decode(data, verbose=False):
     p = PrintCollector()
-    data = data.replace(' ', '').strip()
-    if len(data) % 2 != 0:
-        p.print('可能不是9宫格手机键盘编码')
-        return p.smart_output(verbose=verbose)
+    data = data.replace(' ', '').replace('\t', '').strip()
+    # if len(data) % 2 != 0:
+    #     p.print('可能不是9宫格手机键盘编码')
+    #     return p.smart_output(verbose=verbose)
     tmp_data = list(data)
     result = []
     while len(tmp_data) > 0:
@@ -32,8 +33,9 @@ def decode(data, verbose=False):
         tmp_data = tmp_data[2:]
         v = dict_map.get(k)
         if v is None:
-            p.print('可能不是9宫格手机键盘编码')
-            return p.smart_output(verbose=verbose)
+            v = ''
+            # p.print('可能不是9宫格手机键盘编码')
+            # return p.smart_output(verbose=verbose)
 
         result.append(v)
 

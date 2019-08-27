@@ -8,7 +8,7 @@ from mountains import text_type
 
 from handlers.crypto import handlers
 from utils import APIHandler
-from utils.find_ctf_flag import find_flag
+from utils.find_ctf_flag import find_flag, get_flag_from_string, clean_find_ctf_flag_result
 from .utils import RSAHelper, AESHelper, DESHelper
 
 logger = logging.getLogger(__name__)
@@ -107,18 +107,20 @@ class FuzzingDecodeData(APIHandler):
             'rot13', 'shadow_code', 'vigenere', 'xxencode'
         ]
 
-        result_list = []
+        flag_result_dict = {}
         for method in method_list:
             try:
                 result = do_decode(method, data, params)
-                result_list.append(result)
+                get_flag_from_string('\n'.join(result), result_dict=flag_result_dict)
             except:
                 pass
 
-        flag_results = find_flag('\n'.join(result_list))
-        result = '\n'.join(flag_results)
+        result = '\n'.join(flag_result_dict.keys())
         if result == '':
             result = '!!!nothing found!!!'
+        else:
+            result_list = clean_find_ctf_flag_result(result)
+            result = '\n'.join(result_list)
         return self.success(result)
 
 
