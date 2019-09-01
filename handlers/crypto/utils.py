@@ -11,7 +11,10 @@ from Cryptodome.Util.Padding import pad, unpad
 from Cryptodome.Util.number import inverse, bytes_to_long, long_to_bytes
 from Cryptodome.Cipher import DES
 from Cryptodome.Cipher import DES3
-
+from Cryptodome.Util.number import ceil_div, bytes_to_long, long_to_bytes
+from Cryptodome.Util.py3compat import bord, _copy_bytes
+import Cryptodome.Util.number
+from Cryptodome import Random
 from mountains import force_bytes, force_text, text_type
 
 from ..converter.handlers.converter import hex2dec
@@ -34,9 +37,74 @@ def ensure_long(c):
     return c
 
 
+class PKCS1_v1_5_Java_Cipher(object):
+    """
+    Java里面的 RSA/ECB/PKCS1Padding 与 PKCS1_v1_5 有一点不一样
+    """
+    def __init__(self, key, randfunc):
+        self._key = key
+        self._randfunc = randfunc
+
+    def can_encrypt(self):
+        return self._key.can_encrypt()
+
+    def can_decrypt(self):
+        return self._key.can_decrypt()
+
+    def encrypt(self, message):
+        # See 7.2.1 in RFC8017
+        modBits = Cryptodome.Util.number.size(self._key.n)
+        k = ceil_div(modBits, 8)  # Convert from bits to bytes
+        mLen = len(message)
+
+        # Step 1
+        if mLen > k - 11:
+            raise ValueError("Plaintext is too long.")
+        # Step 2a
+        ps = []
+        while len(ps) != k - mLen - 3:
+            # Java 实现的时候是填充为 \xff，所以每次加密相同明文，得到的密文是一样的
+            ps.append(b'\xff')
+        ps = b"".join(ps)
+        assert (len(ps) == k - mLen - 3)
+        # Step 2b
+        # pkcs#1_v115 是 x00x02，Java里面是\x00\x01
+        em = b'\x00\x01' + ps + b'\x00' + _copy_bytes(None, None, message)
+        # Step 3a (OS2IP)
+        em_int = bytes_to_long(em)
+        # Step 3b (RSAEP)
+        m_int = self._key._encrypt(em_int)
+        # Step 3c (I2OSP)
+        c = long_to_bytes(m_int, k)
+        return c
+
+    def decrypt(self, ciphertext, sentinel):
+        # See 7.2.1 in RFC3447
+        modBits = Cryptodome.Util.number.size(self._key.n)
+        k = ceil_div(modBits, 8)  # Convert from bits to bytes
+
+        # Step 1
+        if len(ciphertext) != k:
+            raise ValueError("Ciphertext with incorrect length.")
+        # Step 2a (O2SIP)
+        ct_int = bytes_to_long(ciphertext)
+        # Step 2b (RSADP)
+        m_int = self._key._decrypt(ct_int)
+        # Complete step 2c (I2OSP)
+        em = long_to_bytes(m_int, k)
+        # Step 3
+        sep = em.find(b'\x00', 2)
+        # pkcs#1_v115 是 x00x02
+        if not (em.startswith(b'\x00\x02') or em.startswith(b'\x00\x01')) or sep < 10:
+            return sentinel
+        # Step 4
+        return em[sep + 1:]
+
+
 class RSAHelper(object):
     def __init__(self, n=None, e=None, p=None, q=None, d=None, padding='NoPadding',
-                 passphrase=None, plain_encoding='Decimal', cipher_encoding='Decimal'):
+                 passphrase=None, plain_encoding='Decimal', cipher_encoding='Decimal',
+                 encrypt_method='public-key-encrypt'):
         self.n, self.e, self.p, self.q, self.d = ensure_long(n), ensure_long(e), \
                                                  ensure_long(p), ensure_long(q), ensure_long(d)
 
@@ -47,6 +115,7 @@ class RSAHelper(object):
         self.padding = padding
         self.plain_encoding = plain_encoding
         self.cipher_encoding = cipher_encoding
+        self.encrypt_method = encrypt_method
 
     def read_rsa_pem_key(self, key_content):
         n, e, p, q = '', '', '', ''
@@ -129,16 +198,37 @@ class RSAHelper(object):
         :return:
         """
         plain = self.encoding_2_long(plain, self.plain_encoding)
-        rsa = RSA.construct((self.n, self.e,))
+        # (N,e)是公钥，(N,d)是私钥
+        if self.encrypt_method == 'public-key-encrypt':
+            n, e = self.n, self.e
+        elif self.encrypt_method == 'private-key-encrypt':
+            if self.d is not None:
+                d = self.d
+            else:
+                d = inverse(self.e, (self.p - 1) * (self.q - 1))
+
+            if self.n is not None:
+                n = self.n
+            else:
+                n = self.p * self.q
+
+            n, e = n, d
+        else:
+            return '!!!wrong encrypt_method!!!'
+
+        rsa = RSA.construct((n, e,))
         # 最佳非对称加密填充（OAEP）
         if self.padding == 'PKCS1_OAEP':
             rsa = PKCS1_OAEP.new(rsa)
+            cipher = rsa.encrypt(long_to_bytes(plain))
+        elif self.padding == 'PKCS1_v1_5_Java':
+            rsa = PKCS1_v1_5_Java_Cipher(rsa, Random.get_random_bytes)
             cipher = rsa.encrypt(long_to_bytes(plain))
         elif self.padding == 'PKCS1_v1_5':
             rsa = PKCS1_v1_5.new(rsa)
             cipher = rsa.encrypt(long_to_bytes(plain))
         else:
-            cipher = pow(plain, self.e, self.n)
+            cipher = pow(plain, e, n)
             return self.long_2_encoding(cipher, self.cipher_encoding)
 
         cipher = self.long_2_encoding(bytes_to_long(cipher), self.cipher_encoding)
@@ -158,16 +248,35 @@ class RSAHelper(object):
 
         if self.n is not None:
             n = self.n
-        else:
+        elif self.p is not None and self.q is not None:
             n = self.p * self.q
+        else:
+            return '!!!error: n is empty!!!'
 
-        rsa = RSA.construct((n, self.e, d))
+        # (N,e)是公钥，(N,d)是私钥
+        if self.encrypt_method == 'private-key-encrypt':
+            n, e, d = n, d, self.e
+        elif self.encrypt_method == 'public-key-encrypt':
+            n, e, d = n, self.e, d
+        else:
+            return '!!!wrong encrypt_method!!!'
+
+        rsa = RSA.construct((n, e, d))
         if self.padding == 'PKCS1_OAEP':
             rsa = PKCS1_OAEP.new(rsa)
             plain = rsa.decrypt(long_to_bytes(cipher))
+        elif self.padding == 'PKCS1_v1_5_Java':
+            rsa = PKCS1_v1_5_Java_Cipher(rsa, Random.get_random_bytes)
+            # 第二个参数 False，表示出错时会返回 False，plain 的值将为 False
+            plain = rsa.decrypt(long_to_bytes(cipher), False)
+            if plain is False:
+                return '!!!error: decrypt error!!!'
         elif self.padding == 'PKCS1_v1_5':
             rsa = PKCS1_v1_5.new(rsa)
-            plain = rsa.decrypt(long_to_bytes(cipher), True)
+            # 第二个参数 False，表示出错时会返回 False，plain 的值将为 False
+            plain = rsa.decrypt(long_to_bytes(cipher), False)
+            if plain is False:
+                return '!!!error: decrypt error!!!'
         else:
             plain = pow(cipher, d, n)
             return self.long_2_encoding(plain, self.plain_encoding)

@@ -229,6 +229,9 @@ class RSAToPEMKey(APIHandler):
 class RSAEncryptDecrypt(APIHandler):
     """
     rsa 加解密
+    私钥加密公钥可以解密
+    公钥加密私钥可以解密
+    (N,e)是公钥，(N,d)是私钥
     :return:
     """
 
@@ -247,6 +250,8 @@ class RSAEncryptDecrypt(APIHandler):
         padding = self.request.json.get('padding', 'NoPadding')
         plain_encoding = self.request.json.get('plain_encoding', 'Decimal')
         cipher_encoding = self.request.json.get('cipher_encoding', 'Decimal')
+        # 加密方式，公钥加密，私钥解密，还是私钥加密，公钥解密
+        encrypt_method = self.request.json.get('encrypt_method', 'public-key-encrypt')
 
         if e == '':
             return self.fail(msg='e不能为空')
@@ -260,22 +265,41 @@ class RSAEncryptDecrypt(APIHandler):
         try:
             rsa = RSAHelper(n, e, p, q, d, padding=padding,
                             plain_encoding=plain_encoding,
-                            cipher_encoding=cipher_encoding)
-            if action == 'decrypt':
-                if (p != '' and q != '') or d != '':
-                    if cipher == '':
-                        return self.fail(msg='密文不能为空')
-                    plain = rsa.decrypt(cipher)
-                else:
-                    return self.fail(msg='p和q或者d不能为空')
-            else:
-                if (n != '' or (p != '' and q != '')) and e != '':
-                    if plain == '':
-                        return self.fail(msg='明文不能为空')
+                            cipher_encoding=cipher_encoding,
+                            encrypt_method=encrypt_method)
 
-                    cipher = rsa.encrypt(plain)
+            if action == 'decrypt':
+                if encrypt_method == 'public-key-encrypt':
+                    if (p != '' and q != '') or d != '':
+                        if cipher == '':
+                            return self.fail(msg='密文不能为空')
+                        plain = rsa.decrypt(cipher)
+                    else:
+                        return self.fail(msg='p和q或者d不能为空')
                 else:
-                    return self.fail(msg='n和e不能为空')
+                    if n != '' and e != '':
+                        if cipher == '':
+                            return self.fail(msg='密文不能为空')
+                        plain = rsa.decrypt(cipher)
+                    else:
+                        return self.fail(msg='n和e不能为空')
+            else:
+                if encrypt_method == 'public-key-encrypt':
+                    if (n != '' or (p != '' and q != '')) and e != '':
+                        if plain == '':
+                            return self.fail(msg='明文不能为空')
+
+                        cipher = rsa.encrypt(plain)
+                    else:
+                        return self.fail(msg='n和e不能为空')
+                else:
+                    if ((p != '' and q != '') or d != '') and e != '':
+                        if plain == '':
+                            return self.fail(msg='明文不能为空')
+
+                        cipher = rsa.encrypt(plain)
+                    else:
+                        return self.fail(msg='p、q或者d和e不能为空')
 
         except Exception as e:
             logger.exception(e)
@@ -314,7 +338,8 @@ class RSACalcD(APIHandler):
         try:
             rsa = RSAHelper(n=None, e=e, p=p, q=q)
             d = rsa.calc_d()
-            return self.success(d)
+            # 如果不转成字符串，会表示成科学计数法
+            return self.success(str(d))
         except Exception as e:
             return self.error(msg=str(e))
 
