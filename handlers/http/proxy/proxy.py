@@ -394,7 +394,7 @@ class ProxyServer(object):
 
 if __name__ == "__main__":
     interceptor_code = open('./addons/test1.py').read()
-    proxy = ProxyServer(None, ProxyHandler, interceptor_code)
+    proxy = ProxyServer(ProxyHandler, interceptor_code)
     try:
         proxy.start()
     except KeyboardInterrupt:

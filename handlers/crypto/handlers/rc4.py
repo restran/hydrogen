@@ -42,12 +42,13 @@ def main():
     data = 'UUyFTj8PCzF6geFn6xgBOYSvVTrbpNU4OF9db9wMcPD1yDbaJw=='
     # 密钥
     key = 'welcometoicqedu'
-
+    from base64 import b64decode
+    data = b64decode(data)
     # 加码
-    encoded_data = encode(data=data, key=key)
-    print(encoded_data)
+    # encoded_data = encode(data=data, key=key)
+    # print(encoded_data)
     # 解码
-    decoded_data = decode(data=encoded_data, key=key)
+    decoded_data = decode(data=data, key=key)
     print(decoded_data)
 
 

@@ -86,6 +86,9 @@ class DecodeData(APIHandler):
         if result is None:
             result = '!!!error!!!'
 
+        if isinstance(result, list):
+            result = '\n'.join(result)
+
         return self.success(result)
 
 
@@ -103,15 +106,20 @@ class FuzzingDecodeData(APIHandler):
             'atbash_cipher', 'bacon_case_cipher', 'bacon_cipher', 'caesar', 'caesar_inc_dec',
             'caesar_inc_dec_printable', 'caesar_odd_even', 'caesar_printable', 'caesar_rail_fence',
             'manchester', 'mobile_keyboard', 'modified_base64', 'pigpen_cipher',
-            'polybius_square', 'quoted_printable', 'qwerty_cipher', 'rail_fence', 'rc4',
-            'rot13', 'shadow_code', 'vigenere', 'xxencode'
+            'polybius_square', 'quoted_printable', 'qwerty_cipher', 'rail_fence',
+            'rot13', 'shadow_code', 'vigenere', 'xxencode', 'xor_crack'
         ]
 
         flag_result_dict = {}
         for method in method_list:
             try:
                 result = do_decode(method, data, params)
-                get_flag_from_string('\n'.join(result), result_dict=flag_result_dict)
+                if not isinstance(result, list):
+                    result = result.splitlines()
+
+                # 因为输出结果是一行一行的，每行去识别flag更精确，而不是全部当成一行字符串
+                for line in result:
+                    get_flag_from_string(line, result_dict=flag_result_dict)
             except:
                 pass
 
