@@ -24,14 +24,14 @@ OPTIONS = {
     'strip': True,
     'resources': ['static', 'templates', 'data'],
     'iconfile': 'assets/icon.icns',
-    'excludes': [],
-    'includes': ['WebKit', 'Foundation', 'webview'],
     'packages': [
         'Cryptodome',  # 需要在这里配置，否则 .so 文件不会导入
         'mountains',
         'openpyxl',  # 有一些数据文件
         '_sysconfigdata_m_darwin_darwin'  # 因为sysconfig是动态导入的，无法识别出来
     ],
+    'excludes': ['Cryptodome.SelfTest'],
+    'includes': ['WebKit', 'Foundation', 'webview'],
     'plist': {
         'CFBundleName': APP_NAME,
         'CFBundleDisplayName': APP_NAME,
@@ -39,7 +39,7 @@ OPTIONS = {
         'CFBundleIdentifier': "net.restran.mac.%s" % APP_NAME.lower(),
         'CFBundleVersion': VERSION,
         'CFBundleShortVersionString': VERSION,
-        'NSHumanReadableCopyright': "Copyright © 2019, Restran, All Rights Reserved"
+        'NSHumanReadableCopyright': "Copyright © 2020, Restran, All Rights Reserved"
     }
 }
 

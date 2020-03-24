@@ -16,28 +16,38 @@ Python 环境请使用 Python 3.5 以上
 
 安装依赖
 
-    pip3 install -r requirements.txt
+```bash
+pip3 install -r requirements.txt
+```
 
 Windows
 
-    pip3 install pywebview[winforms]
+```bash
+pip3 install pywebview[winforms]
+```
 
 Linux
 
-    pip3 install pywebview[gtk3]
+```bash
+pip3 install pywebview[gtk3]
+```
 
 Mac
 
-    export PYCURL_SSL_LIBRARY=openssl
-    export LDFLAGS=-L/usr/local/opt/openssl/lib
-    export CPPFLAGS=-I/usr/local/opt/openssl/include
-    pip3 install pycurl --compile --no-cache-dir
-    
-    pip3 install pywebview[cocoa]
+```bash
+export PYCURL_SSL_LIBRARY=openssl
+export LDFLAGS=-L/usr/local/opt/openssl/lib
+export CPPFLAGS=-I/usr/local/opt/openssl/include
+pip3 install pycurl --compile --no-cache-dir
+
+pip3 install pywebview[cocoa]
+```
 
 在 hydrogen 目录下运行
 
-    python3 server.py
+```bash
+python3 server.py
+```
 
 然后打开浏览器，访问 127.0.0.1:8000 即可。若有端口冲突，请修改 settings.py 的配置
 
@@ -100,6 +110,27 @@ py2app 提供了“别名模式”，该模式通过与开发文件象征性的�
 如果出现无法运行，需要进行调试，可以在打包后的程序，显示包内容，然后在命令行下面运行
 
     dist/Hydrogen.app/Contents/MacOS/Hydrogen
+
+## 错误解决
+
+### mac 环境下 pycurl 问题
+
+mac 环境下运行 server.py 出现 pycurl 报错
+
+```
+ImportError: pycurl: libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)
+```
+
+解决方法
+
+```bash
+# 先卸载 pycurl
+pip3 uninstall pycurl
+# 如果是用 homebrew 安装的 openssl，可以用这种方法安装 pycurl
+pip3 install pycurl --global-option=build_ext --global-option="-L/usr/local/opt/openssl/lib" --global-option="-I/usr/local/opt/openssl/include"
+```
+
+
 
 ## 已知问题
 

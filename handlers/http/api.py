@@ -123,7 +123,8 @@ class HTTPProxy(APIHandler):
             params = {
                 'uuid': interceptor
             }
-            rows = self.database.query(sql, **params).as_dict()
+            with self.database.get_connection() as conn:
+                rows = conn.query(sql, **params).as_dict()
             if len(rows) <= 0:
                 return self.fail(msg='查找不到该 Interceptor')
             interceptor_code = rows[0]['code']
@@ -177,7 +178,8 @@ class HTTPInterceptor(APIHandler):
                     'code': code,
                     'create_date': datetime2str(datetime.now())
                 }
-                self.database.query(sql, **params)
+                with self.database.get_connection() as conn:
+                    conn.query(sql, **params)
                 return self.success(params)
             except Exception as e:
                 return self.fail(msg='%s' % e)
@@ -190,13 +192,15 @@ class HTTPInterceptor(APIHandler):
                 params = {
                     'uuid': entry_uuid,
                 }
-                self.database.query(sql, **params)
+                with self.database.get_connection() as conn:
+                    conn.query(sql, **params)
                 return self.success(params)
             except Exception as e:
                 return self.fail(msg='%s' % e)
         elif action == 'get-all':
             sql = 'select * from interceptor order by create_date'
-            data = self.database.query(sql).as_dict()
+            with self.database.get_connection() as conn:
+                data = conn.query(sql).as_dict()
             return self.success(data)
         else:
             return self.success()

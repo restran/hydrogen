@@ -77,15 +77,18 @@ class Application(tornado.web.Application):
         if sys.platform != 'darwin':
             self.database = records.Database('sqlite:///' + get_path('data/database.db'))
             sql = "select name from sqlite_master where type='table' order by name"
-            rows = self.database.query(sql).as_dict()
+            with self.database.get_connection() as conn:
+                rows = conn.query(sql).as_dict()
             name_set = set([t['name'] for t in rows])
             if 'interceptor' not in name_set:
-                self.database.query(SQL_CREATE_TABLE_INTERCEPTOR)
+                with self.database.get_connection() as conn:
+                    conn.query(SQL_CREATE_TABLE_INTERCEPTOR)
 
             if 'http_history' not in name_set:
-                self.database.query(SQL_CREATE_TABLE_HTTP_HISTORY)
-                for t in SQL_CREATE_INDEX_HTTP_HISTORY:
-                    self.database.query(t)
+                with self.database.get_connection() as conn:
+                    conn.query(SQL_CREATE_TABLE_HTTP_HISTORY)
+                    for t in SQL_CREATE_INDEX_HTTP_HISTORY:
+                        conn.query(t)
         else:
             self.database = None
 
