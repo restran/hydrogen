@@ -12,6 +12,8 @@ from base64 import b64decode, b32decode, b16decode, urlsafe_b64encode, urlsafe_b
 from xml.sax.saxutils import escape as xml_escape_func
 from xml.sax.saxutils import unescape as xml_unescape_func
 from handlers.converter.handlers.base58 import b58decode, b58encode
+from handlers.converter.handlers.base92 import b92decode, b92encode
+from handlers.converter.handlers.base91 import b91decode, b91encode
 from mountains.encoding import force_bytes, force_text
 
 
@@ -62,6 +64,30 @@ def url_safe_b64encode(data):
 
 def url_safe_b64decode(data):
     return force_text(urlsafe_b64decode(force_bytes(data)))
+
+
+def from_base85(data):
+    return force_text(base64.b85decode(force_bytes(data)))
+
+
+def to_base85(data):
+    return force_text(base64.b85encode(force_bytes(data)))
+
+
+def from_base92(data):
+    return force_text(b92decode(data))
+
+
+def to_base92(data):
+    return force_text(b92encode(force_bytes(data)))
+
+
+def from_base91(data):
+    return b91decode(data).decode()
+
+
+def to_base91(data):
+    return force_text(b91encode(force_bytes(data)))
 
 
 def to_base64(data):
