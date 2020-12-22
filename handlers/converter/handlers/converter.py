@@ -277,7 +277,7 @@ def dec2hex(s):
 # 十六进制 to 二进制: bin(int(str,16))
 def hex2bin(s):
     if len(s) % 2 != 0:
-        s += '0'
+        s = '0' + s
 
     result = []
     for i in range(len(s) // 2):
@@ -288,7 +288,8 @@ def hex2bin(s):
         x = '%s%s' % ('0' * padding_length, x)
         result.append(x)
 
-    return ''.join(result)
+    result = ''.join(result)
+    return result if result != '' else '00000000'
 
 
 # bin2hex
