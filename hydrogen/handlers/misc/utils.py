@@ -25,6 +25,24 @@ class IPConverter(object):
         return socket.inet_ntoa(struct.pack('I', socket.htonl(int_ip)))
 
 
+def sort_asc(data, *args, **kwargs):
+    """
+    正向排序
+    """
+    data_list = data.splitlines()
+    data_list.sort()
+    return '\n'.join(data_list)
+
+
+def sort_desc(data, *args, **kwargs):
+    """
+    反向排序
+    """
+    data_list = data.splitlines()
+    data_list.sort(reverse=True)
+    return '\n'.join(data_list)
+
+
 def remove_duplicated(data, *args, **kwargs):
     """
     一行一个数据去重

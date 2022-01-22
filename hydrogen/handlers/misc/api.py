@@ -37,6 +37,10 @@ def do_utility_handle(method, data, params, multiple_input):
         func = char_count
     elif method == 'caidao_decode':
         func = caidao_decode
+    elif method == 'sort_asc':
+        func = sort_asc
+    elif method == 'sort_desc':
+        func = sort_desc
     else:
         result = '!!!error!!! method %s not found' % method
         return result
