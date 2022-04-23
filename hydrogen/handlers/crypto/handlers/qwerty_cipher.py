@@ -16,6 +16,11 @@ dict_map2 = 'qazwsxedcrfvtgbyhnujmikolp'
 # qwerty 逆序
 dict_map3 = 'mnbvcxzlkjhgfdsapoiuytrewq'
 
+# CTF不常见的dvorak键盘密码，ypau --> flag
+# dvorak键盘
+raw_map_dvorak = '{[}]"\'<,>.PpYyFfGgCcRrLl?/+=|\\AaOoEeUuIiDdHhTtNnSs_-:;QqJjKkXxBbMmWwVvZz'
+dict_map4 = '_-+=QqWwEeRrTtYyUuIiOoPp{[}]|\\AaSsDdFfGgHhJjKkLl:;"\'ZzXxCcVvBbNnMm<,>.?/'
+
 
 def decode(data, dict_map):
     data = data.lower()
@@ -32,6 +37,21 @@ def decode(data, dict_map):
     return result
 
 
+def decode_dvorak(data, dict_map):
+    data = data.lower()
+    result = []
+    for t in data:
+        if t not in raw_map_dvorak:
+            v = t
+        else:
+            i = dict_map.index(t)
+            v = raw_map_dvorak[i]
+        result.append(v)
+
+    result = ''.join(result)
+    return result
+
+
 def decode_all(data, verbose=False):
     p = PrintCollector()
     p.print('标准 qwerty 键盘')
@@ -42,6 +62,10 @@ def decode_all(data, verbose=False):
     p.print(r)
     p.print('\nqwerty 逆序')
     r = decode(data, dict_map3)
+    p.print(r)
+    # dvorak键盘
+    p.print('\ndvorak 键盘')
+    r = decode_dvorak(data, dict_map4)
     p.print(r)
 
     return p.smart_output(verbose=verbose)

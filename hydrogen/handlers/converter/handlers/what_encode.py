@@ -16,7 +16,8 @@ from optparse import OptionParser
 from future.moves.urllib.parse import unquote_plus
 from mountains import PY3, PY2
 from mountains.encoding import force_text, force_bytes
-
+from .base91 import b91decode
+from .base92 import b92decode
 from handlers.converter.handlers.converter import partial_base16_decode, base_padding, hex2str, from_base58
 from handlers.crypto.handlers.rot13 import decode_rot13
 
@@ -41,6 +42,8 @@ encode_methods = [
     'ascii_85',  # ascii85
     'base85',  # base85
     'base58',  # base58
+    'base91',  # base91
+    'base92',  # base92
     'binary',  # 01010101
     'octal',  # 八进制
     'octal_binary',  # 八进制直接转成16进制的二进制格式
@@ -194,6 +197,16 @@ class WhatEncode(object):
                     decode_str = from_base58(encode_str)
                 else:
                     return False, raw_encode_str
+            elif decode_method == 'base91':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
+                if len(encode_str) < 4:
+                    return False, raw_encode_str
+                decode_str = b91decode(encode_str)
+            elif decode_method == 'base92':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
+                if len(encode_str) < 4:
+                    return False, raw_encode_str
+                decode_str = b92decode(encode_str)
             elif decode_method == 'ascii_85':
                 if len(encode_str) < 4:
                     return False, raw_encode_str
