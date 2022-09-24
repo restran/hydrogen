@@ -18,7 +18,8 @@ from mountains import PY3, PY2
 from mountains.encoding import force_text, force_bytes
 from .base91 import b91decode
 from .base92 import b92decode
-from handlers.converter.handlers.converter import partial_base16_decode, base_padding, hex2str, from_base58
+from handlers.converter.handlers.converter import partial_base16_decode, base_padding, hex2str, from_base58, \
+    from_base36, from_base62, from_base100, from_any_base32
 from handlers.crypto.handlers.rot13 import decode_rot13
 
 logger = logging.getLogger(__name__)
@@ -38,8 +39,12 @@ encode_methods = [
     'base64',
     'urlsafe_b64',
     'base32',
+    'base36',
+    'base62',
+    'base100',
+    'any_base32',
     'base16',  # base16 其实就是16进制
-    'ascii_85',  # ascii85
+    'ascii85',  # ascii85
     'base85',  # base85
     'base58',  # base58
     'base91',  # base91
@@ -207,7 +212,27 @@ class WhatEncode(object):
                 if len(encode_str) < 4:
                     return False, raw_encode_str
                 decode_str = b92decode(encode_str)
-            elif decode_method == 'ascii_85':
+            elif decode_method == 'base36':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
+                if len(encode_str) < 4:
+                    return False, raw_encode_str
+                decode_str = from_base36(encode_str)
+            elif decode_method == 'base62':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
+                if len(encode_str) < 4:
+                    return False, raw_encode_str
+                decode_str = from_base62(encode_str)
+            elif decode_method == 'base100':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
+                if len(encode_str) < 4:
+                    return False, raw_encode_str
+                decode_str = from_base100(encode_str)
+            elif decode_method == 'any_base32':
+                encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
+                if len(encode_str) < 4:
+                    return False, raw_encode_str
+                decode_str = from_any_base32(encode_str)
+            elif decode_method == 'ascii85':
                 if len(encode_str) < 4:
                     return False, raw_encode_str
 

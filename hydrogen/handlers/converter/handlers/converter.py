@@ -14,6 +14,11 @@ from xml.sax.saxutils import unescape as xml_unescape_func
 from handlers.converter.handlers.base58 import b58decode, b58encode
 from handlers.converter.handlers.base92 import b92decode, b92encode
 from handlers.converter.handlers.base91 import b91decode, b91encode
+from handlers.converter.handlers.base100 import b100decode, b100encode
+from handlers.converter.handlers.base62 import b62encode, b62decode
+from handlers.converter.handlers.base36 import b36decode, b36encode
+from handlers.converter.handlers.any_base32 import any_b32decode, any_b32encode
+from base64 import b85decode, a85decode
 from mountains.encoding import force_bytes, force_text
 
 
@@ -74,6 +79,14 @@ def to_base85(data):
     return force_text(base64.b85encode(force_bytes(data)))
 
 
+def from_ascii85(data):
+    return force_text(base64.a85decode(force_bytes(data)))
+
+
+def to_ascii85(data):
+    return force_text(base64.a85encode(force_bytes(data)))
+
+
 def from_base92(data):
     return force_text(b92decode(data))
 
@@ -88,6 +101,38 @@ def from_base91(data):
 
 def to_base91(data):
     return force_text(b91encode(force_bytes(data)))
+
+
+def from_base100(data):
+    return b100decode(data).decode()
+
+
+def to_base100(data):
+    return force_text(b100encode(force_bytes(data)))
+
+
+def from_base62(data):
+    return str(b62decode(data))
+
+
+def to_base62(data):
+    return force_text(b62encode(int(data)))
+
+
+def from_any_base32(data):
+    return any_b32decode(force_bytes(data)).decode()
+
+
+def to_any_base32(data):
+    return force_text(any_b32encode(force_bytes(data)))
+
+
+def from_base36(data):
+    return str(b36decode(data))
+
+
+def to_base36(data):
+    return force_text(b36encode(int(data)))
 
 
 def to_base64(data):
