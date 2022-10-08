@@ -8,6 +8,7 @@ from __future__ import unicode_literals, absolute_import
 import base64
 import binascii
 import string
+import quopri
 from base64 import b64decode, b32decode, b16decode, urlsafe_b64encode, urlsafe_b64decode
 from xml.sax.saxutils import escape as xml_escape_func
 from xml.sax.saxutils import unescape as xml_unescape_func
@@ -452,6 +453,14 @@ def xml_escape(data):
 
 def xml_un_escape(data):
     return xml_unescape_func(data)
+
+
+def to_quoted_printable(data):
+    return force_text(quopri.encodestring(force_bytes(data)))
+
+
+def from_quoted_printable(data):
+    return force_text(quopri.decodestring(force_bytes(data)))
 
 
 if __name__ == "__main__":
