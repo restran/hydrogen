@@ -16,11 +16,12 @@ from optparse import OptionParser
 from future.moves.urllib.parse import unquote_plus
 from mountains import PY3, PY2
 from mountains.encoding import force_text, force_bytes
-from .base91 import b91decode
-from .base92 import b92decode
 from handlers.converter.handlers.converter import partial_base16_decode, base_padding, hex2str, from_base58, \
-    from_base36, from_base62, from_base100, from_any_base32
+    from_base36, from_base62, from_base100, from_any_base32, from_base58_flickr, from_base58_ripple, \
+    to_base58_flickr, to_base58_ripple, from_base91, to_base91, from_base92, to_base92
+
 from handlers.crypto.handlers.rot13 import decode_rot13
+from handlers.crypto.handlers.rot47 import decode_rot47
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,8 @@ encode_methods = [
     'ascii85',  # ascii85
     'base85',  # base85
     'base58',  # base58
+    'base58_ripple',  # base58_ripple
+    'base58_flickr',  # base58_flickr
     'base91',  # base91
     'base92',  # base92
     'binary',  # 01010101
@@ -59,6 +62,7 @@ encode_methods = [
     'decimal',  # 10 进制数据，转成16进制
     'zlib',
     'rot13',
+    'rot47',
     'pawn_shop',  # 当铺密码
     'swap_case',  # 大小写交换
     'reverse_alphabet',  # 字母表逆序
@@ -191,27 +195,31 @@ class WhatEncode(object):
                     decode_str = urlsafe_b64decode(base_padding(encode_str, 4))
                 else:
                     return False, raw_encode_str
-            elif decode_method == 'base58':
+            elif decode_method in ('base58', 'base58_ripple', 'base58_flickr'):
                 encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
                 if len(encode_str) < 4:
                     return False, raw_encode_str
 
                 rex = re.compile('^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$', re.MULTILINE)
-                # 自动纠正填充
                 if self.regex_match(rex, encode_str):
-                    decode_str = from_base58(encode_str)
+                    if decode_method == 'base58':
+                        decode_str = from_base58(encode_str)
+                    elif decode_method == 'base58_ripple':
+                        decode_str = from_base58_ripple(encode_str)
+                    elif decode_method == 'base58_flickr':
+                        decode_str = from_base58_flickr(encode_str)
                 else:
                     return False, raw_encode_str
             elif decode_method == 'base91':
                 encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
                 if len(encode_str) < 4:
                     return False, raw_encode_str
-                decode_str = b91decode(encode_str)
+                decode_str = from_base91(encode_str)
             elif decode_method == 'base92':
                 encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
                 if len(encode_str) < 4:
                     return False, raw_encode_str
-                decode_str = b92decode(encode_str)
+                decode_str = from_base92(encode_str)
             elif decode_method == 'base36':
                 encode_str = encode_str.strip().replace(' ', '').replace('\n', '')
                 if len(encode_str) < 4:
@@ -261,6 +269,11 @@ class WhatEncode(object):
                 if 'rot13' in m_list:
                     return False, raw_encode_str
                 decode_str = decode_rot13(encode_str)
+            elif decode_method == 'rot47':
+                # 如果这里不做限制，会无限递归下去
+                if 'rot47' in m_list:
+                    return False, raw_encode_str
+                decode_str = decode_rot47(encode_str)
             elif decode_method == 'pawn_shop':
                 try:
                     encode_str = encode_str.decode('gb2312')

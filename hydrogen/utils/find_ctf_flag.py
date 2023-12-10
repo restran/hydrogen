@@ -23,18 +23,18 @@ def get_flag_from_string(content, strict_mode=False, result_dict=None):
     re_list = [
         # (r'(?:key|flag|ctf)\{[^\{\}]{3,35}\}', re.I),
         # (r'(?:key|KEY|flag|FLAG|ctf|CTF)+[\x20-\x7E]{3,50}', re.I),
-        (r'(?:key|flag|ctf|synt|galf)[\x20-\x7E]{5,41}', re.I),
+        (r'(?:key|flag|ctf|synt|galf|666c6167|Zmxh|464C4147|1100110011011000110000101100111|f1ag|ffllaagg|f-l-a-g)[\x20-\x7E]{5,65}', re.I),
         # (r'(?:key|flag|ctf|synt|galf)[\x20-\x7E]{0,3}(?::|=|\{|is)[\x20-\x7E]{,40}', re.I),
-        (r'k.{0,2}e.{0,2}y[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,40}', re.I),
-        (r'f.{0,2}l.{0,2}a.{0,2}g[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,40}', re.I),
-        (r'c.{0,2}t.{0,2}f.{0,2}[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,40}', re.I),
-        (r's.{0,2}y.{0,2}n.{0,2}t[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,40}', re.I),
-        (r'g.{0,2}a.{0,2}l.{0,2}f[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,40}', re.I),
+        (r'k.{0,2}e.{0,2}y[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,65}', re.I),
+        (r'f.{0,2}l.{0,2}a.{0,2}g[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,65}', re.I),
+        (r'c.{0,2}t.{0,2}f.{0,2}[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,65}', re.I),
+        (r's.{0,2}y.{0,2}n.{0,2}t[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,65}', re.I),
+        (r'g.{0,2}a.{0,2}l.{0,2}f[\x20-\x7E]{0,2}(?::|=|\{|is)[\x20-\x7E]{3,65}', re.I),
     ]
 
     if not strict_mode:
         re_list.extend([
-            (r'[a-z0-9]{0,8}[\x20-\x7E]{0,3}\{[\x20-\x7E]{4,40}\}', re.I),
+            (r'[a-z0-9]{0,8}[\x20-\x7E]{0,3}\{[\x20-\x7E]{4,65}\}', re.I),
             (r'[\x20-\x7E]{0,8}[a-zA-Z0-9_]{16}[\x20-\x7E]{0,5}', re.I),
             (r'[\x20-\x7E]{0,8}[a-zA-Z0-9_]{32}[\x20-\x7E]{0,5}', re.I),
         ])
@@ -72,13 +72,13 @@ def get_flag_from_string(content, strict_mode=False, result_dict=None):
 def clean_find_ctf_flag_result(result):
     def re_match_flag(a):
         re_list = [
-            (r'(key|flag|ctf|synt|galf)[\x20-\x7E]{5,41}', re.I),
-            (r'[\x20-\x7E]{5,41}(yek|ftc|galf|tnys)', re.I),
-            (r'k[\x20-\x7E]?e[\x20-\x7E]?y[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,40}', re.I),
-            (r'f[^\w]?l[\x20-\x7E]?a[\x20-\x7E]?g[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,40}', re.I),
-            (r'c[\x20-\x7E]?t[\x20-\x7E]?f[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,40}', re.I),
-            (r's[\x20-\x7E]?y[\x20-\x7E]?n[\x20-\x7E]?t[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,40}', re.I),
-            (r'g[\x20-\x7E]?a[\x20-\x7E]?l[\x20-\x7E]?f[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,40}', re.I),
+            (r'(key|flag|ctf|synt|galf|666c6167|Zmxh|464C4147|1100110011011000110000101100111|f1ag|ffllaagg|f-l-a-g)[\x20-\x7E]{5,65}', re.I),
+            (r'[\x20-\x7E]{5,65}(yek|ftc|galf|tnys|hxmZ|7616c666|7414C464)', re.I),
+            (r'k[\x20-\x7E]?e[\x20-\x7E]?y[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,65}', re.I),
+            (r'f[^\w]?l[\x20-\x7E]?a[\x20-\x7E]?g[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,65}', re.I),
+            (r'c[\x20-\x7E]?t[\x20-\x7E]?f[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,65}', re.I),
+            (r's[\x20-\x7E]?y[\x20-\x7E]?n[\x20-\x7E]?t[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,65}', re.I),
+            (r'g[\x20-\x7E]?a[\x20-\x7E]?l[\x20-\x7E]?f[\x20-\x7E]?(\s|:|=|\{|is)[\x20-\x7E]{3,65}', re.I),
         ]
 
         pattern_list = [re.compile(*r) for r in re_list]
@@ -91,8 +91,8 @@ def clean_find_ctf_flag_result(result):
 
     def re_match_flag_2(a):
         re_list = [
-            (r'(key|flag|ctf|synt|galf)(\s|:|=|\{|is)[\x20-\x7E]{5,40}', re.I),
-            (r'[\x20-\x7E]{5,40}(\s|:|=|\{|is)(yek|ftc|galf|tnys)', re.I),
+            (r'(key|flag|ctf|synt|galf|666c6167|Zmxh|464C4147|1100110011011000110000101100111|f1ag|ffllaagg|f-l-a-g)(\s|:|=|\{|is)[\x20-\x7E]{5,65}', re.I),
+            (r'[\x20-\x7E]{5,65}(\s|:|=|\{|is)(yek|ftc|galf|tnys)', re.I),
         ]
 
         pattern_list = [re.compile(*r) for r in re_list]

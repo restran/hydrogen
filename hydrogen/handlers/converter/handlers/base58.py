@@ -3,12 +3,17 @@
 from __future__ import unicode_literals, absolute_import
 
 """Base58 encoding
-Implementations of Base58 and Base58Check endcodings that are compatible
+Implementations of Base58 and Base58Check encodings that are compatible
 with the bitcoin network.
 """
 
 # 58 character alphabet used
-alphabet = b'123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+# 比特币地址、Monero 地址
+alphabet_bitcoin = b'123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+# Ripple 地址
+alphabet_ripple = b'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz'
+# Flickr 的短URL
+alphabet_flickr = b'123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
 
 if bytes == str:  # python2
     iseq, bseq, buffer = (
@@ -31,7 +36,7 @@ def scrub_input(v):
     return v
 
 
-def b58encode_int(i, default_one=True):
+def b58encode_int(i, default_one=True, alphabet=alphabet_bitcoin):
     """Encode an integer using Base58"""
     if not i and default_one:
         return alphabet[0:1]
@@ -42,25 +47,25 @@ def b58encode_int(i, default_one=True):
     return string
 
 
-def b58encode(v):
+def b58encode(v, alphabet=alphabet_bitcoin):
     """Encode a string using Base58"""
     v = scrub_input(v)
 
-    nPad = len(v)
+    n_pad = len(v)
     v = v.lstrip(b'\0')
-    nPad -= len(v)
+    n_pad -= len(v)
 
     p, acc = 1, 0
     for c in iseq(reversed(v)):
         acc += p * c
         p = p << 8
 
-    result = b58encode_int(acc, default_one=False)
+    result = b58encode_int(acc, default_one=False, alphabet=alphabet)
 
-    return alphabet[0:1] * nPad + result
+    return alphabet[0:1] * n_pad + result
 
 
-def b58decode_int(v):
+def b58decode_int(v, alphabet=alphabet_bitcoin):
     """Decode a Base58 encoded string as an integer"""
     v = v.rstrip()
     v = scrub_input(v)
@@ -71,23 +76,39 @@ def b58decode_int(v):
     return decimal
 
 
-def b58decode(v):
+def b58decode(v, alphabet=alphabet_bitcoin):
     """Decode a Base58 encoded string"""
     v = v.rstrip()
     v = scrub_input(v)
 
-    origlen = len(v)
+    orig_len = len(v)
     v = v.lstrip(alphabet[0:1])
-    newlen = len(v)
+    new_len = len(v)
 
-    acc = b58decode_int(v)
+    acc = b58decode_int(v, alphabet=alphabet)
 
     result = []
     while acc > 0:
         acc, mod = divmod(acc, 256)
         result.append(mod)
 
-    return b'\0' * (origlen - newlen) + bseq(reversed(result))
+    return b'\0' * (orig_len - new_len) + bseq(reversed(result))
+
+
+def b58decode_ripple(v):
+    return b58decode(v, alphabet=alphabet_ripple)
+
+
+def b58encode_ripple(v):
+    return b58encode(v, alphabet=alphabet_ripple)
+
+
+def b58decode_flickr(v):
+    return b58decode(v, alphabet=alphabet_flickr)
+
+
+def b58encode_flickr(v):
+    return b58encode(v, alphabet=alphabet_flickr)
 
 
 def main():

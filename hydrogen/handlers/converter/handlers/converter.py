@@ -12,7 +12,8 @@ import quopri
 from base64 import b64decode, b32decode, b16decode, urlsafe_b64encode, urlsafe_b64decode
 from xml.sax.saxutils import escape as xml_escape_func
 from xml.sax.saxutils import unescape as xml_unescape_func
-from handlers.converter.handlers.base58 import b58decode, b58encode
+from handlers.converter.handlers.base58 import b58decode, b58encode, b58decode_ripple, b58encode_ripple, \
+    b58encode_flickr, b58decode_flickr
 from handlers.converter.handlers.base92 import b92decode, b92encode
 from handlers.converter.handlers.base91 import b91decode, b91encode
 from handlers.converter.handlers.base100 import b100decode, b100encode
@@ -206,6 +207,22 @@ def from_base58(data):
 
 def to_base58(data):
     return b58encode(force_bytes(data))
+
+
+def from_base58_flickr(data):
+    return b58decode_flickr(force_bytes(data))
+
+
+def to_base58_flickr(data):
+    return b58encode_flickr(force_bytes(data))
+
+
+def from_base58_ripple(data):
+    return b58decode_ripple(force_bytes(data))
+
+
+def to_base58_ripple(data):
+    return b58encode_ripple(force_bytes(data))
 
 
 def to_uu(data):

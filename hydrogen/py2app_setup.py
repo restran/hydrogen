@@ -39,7 +39,7 @@ OPTIONS = {
         'CFBundleIdentifier': "net.restran.mac.%s" % APP_NAME.lower(),
         'CFBundleVersion': VERSION,
         'CFBundleShortVersionString': VERSION,
-        'NSHumanReadableCopyright': "Copyright © 2020, Restran, All Rights Reserved"
+        'NSHumanReadableCopyright': "Copyright © 2023, Restran, All Rights Reserved"
     }
 }
 

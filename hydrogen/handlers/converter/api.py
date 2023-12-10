@@ -13,7 +13,6 @@ from utils import APIHandler
 
 logger = logging.getLogger(__name__)
 
-
 def smart_text(s):
     try:
         if isinstance(s, str) or isinstance(s, bytes):

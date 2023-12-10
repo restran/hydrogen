@@ -107,7 +107,7 @@ class FuzzingDecodeData(APIHandler):
             'caesar_inc_dec_printable', 'caesar_odd_even', 'caesar_printable', 'caesar_rail_fence',
             'manchester', 'mobile_keyboard', 'modified_base64', 'pigpen_cipher',
             'polybius_square', 'quoted_printable', 'qwerty_cipher', 'rail_fence',
-            'rot13', 'shadow_code', 'vigenere', 'xxencode', 'xor_crack'
+            'rot13', 'rot47', 'shadow_code', 'vigenere', 'xxencode', 'xor_crack'
         ]
 
         flag_result_dict = {}

@@ -96,6 +96,7 @@ class PKCS1_v1_5_Java_Cipher(object):
         sep = em.find(b'\x00', 2)
         # pkcs#1_v115 是 x00x02
         if not (em.startswith(b'\x00\x02') or em.startswith(b'\x00\x01')) or sep < 10:
+            logger.error(str(em))
             return sentinel
         # Step 4
         return em[sep + 1:]
