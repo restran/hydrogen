@@ -5,7 +5,7 @@ from __future__ import unicode_literals, absolute_import
 import os
 
 APP_NAME = 'Hydrogen'
-VERSION = '0.8.0'
+VERSION = '2023.12.10'
 
 DEBUG = True
 HOST = '127.0.0.1'
